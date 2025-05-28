@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 import { TripData } from "./ItineraryPlanner";
 
 const tripSchema = z.object({
+  fromDestination: z.string().min(1, "From destination is required"),
   destinations: z.array(z.string()).min(1, "At least one destination is required"),
   startDate: z.date({
     required_error: "Start date is required",
@@ -40,10 +41,11 @@ const TripForm = ({ onSubmit }: TripFormProps) => {
   const form = useForm<z.infer<typeof tripSchema>>({
     resolver: zodResolver(tripSchema),
     defaultValues: {
+      fromDestination: "",
       destinations: [""],
       includeFlights: true,
       budget: 1000,
-      currency: "USD",
+      currency: "MYR",
     },
   });
 
@@ -80,10 +82,12 @@ const TripForm = ({ onSubmit }: TripFormProps) => {
     
     const formData = new FormData(e.target as HTMLFormElement);
     const budget = Number(formData.get("budget"));
+    const fromDestination = formData.get("fromDestination") as string;
     const currency = formData.get("currency") as string;
     const includeFlights = formData.get("includeFlights") === "on";
 
     const tripData: TripData = {
+      fromDestination,
       destinations: filteredDestinations,
       startDate,
       endDate,
@@ -98,6 +102,14 @@ const TripForm = ({ onSubmit }: TripFormProps) => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      <Label className="text-base font-semibold">From</Label>
+      <Input
+        id="fromDestination"
+        name="fromDestination"
+        className="!mt-4"
+        placeholder="Enter your starting destination (e.g., Kuala Lumpur)"
+        required
+      />
       <div className="space-y-4">
         <Label className="text-base font-semibold">Destinations</Label>
         {destinations.map((destination, index) => (
@@ -210,6 +222,7 @@ const TripForm = ({ onSubmit }: TripFormProps) => {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value="MYR">MYR (MYR)</SelectItem>
               <SelectItem value="USD">USD ($)</SelectItem>
               <SelectItem value="EUR">EUR (€)</SelectItem>
               <SelectItem value="GBP">GBP (£)</SelectItem>

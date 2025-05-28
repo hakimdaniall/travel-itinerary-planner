@@ -5,6 +5,7 @@ import TripForm from "./TripForm";
 import ItineraryDisplay from "./ItineraryDisplay";
 import { fetchItineraryFromGroq } from "./../api/groqApi";
 export interface TripData {
+  fromDestination: string;
   destinations: string[];
   startDate: Date;
   endDate: Date;
