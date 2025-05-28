@@ -107,7 +107,7 @@ const TripForm = ({ onSubmit }: TripFormProps) => {
         id="fromDestination"
         name="fromDestination"
         className="!mt-4 capitalize"
-        placeholder="Enter your starting destination (e.g., Kuala Lumpur)"
+        placeholder="Enter destination"
         required
       />
       <div className="space-y-4">
@@ -115,7 +115,7 @@ const TripForm = ({ onSubmit }: TripFormProps) => {
         {destinations.map((destination, index) => (
           <div key={index} className="flex gap-2">
             <Input
-              placeholder="Enter destination (e.g., Tokyo, Osaka)"
+              placeholder="Enter destination"
               value={destination}
               onChange={(e) => updateDestination(index, e.target.value)}
               className="flex-1 capitalize"
