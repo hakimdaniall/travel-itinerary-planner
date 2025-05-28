@@ -106,7 +106,7 @@ const TripForm = ({ onSubmit }: TripFormProps) => {
       <Input
         id="fromDestination"
         name="fromDestination"
-        className="!mt-4"
+        className="!mt-4 capitalize"
         placeholder="Enter your starting destination (e.g., Kuala Lumpur)"
         required
       />
@@ -118,7 +118,7 @@ const TripForm = ({ onSubmit }: TripFormProps) => {
               placeholder="Enter destination (e.g., Tokyo, Osaka)"
               value={destination}
               onChange={(e) => updateDestination(index, e.target.value)}
-              className="flex-1"
+              className="flex-1 capitalize"
               required={index === 0}
             />
             {destinations.length > 1 && (
@@ -217,7 +217,7 @@ const TripForm = ({ onSubmit }: TripFormProps) => {
 
         <div className="space-y-2">
           <Label htmlFor="currency">Currency</Label>
-          <Select name="currency" defaultValue="USD">
+          <Select name="currency" defaultValue="MYR">
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
