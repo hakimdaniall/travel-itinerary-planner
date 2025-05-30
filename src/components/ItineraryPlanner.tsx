@@ -1,87 +1,43 @@
-
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import TripForm from "./TripForm";
-import ItineraryDisplay from "./ItineraryDisplay";
-import { fetchItineraryFromGroq } from "./../api/groqApi";
-import { v4 as uuidv4 } from 'uuid';
-
-export interface TripData {
-  fromDestination: string;
-  destinations: string[];
-  startDate: Date;
-  endDate: Date;
-  days: number;
-  includeFlights: boolean;
-  budget: number;
-  currency: string;
-}
-
-export interface ItineraryItem {
-  tempId: string;
-  day: number;
-  time: string;
-  activity: string;
-  location: string;
-  estimatedCost: number;
-  type: "flight" | "accommodation" | "activity" | "meal" | "transport";
-}
+import { fetchItineraryFromGroq } from "@/api/groqApi";
+import { v4 as uuidv4 } from "uuid";
+import { TripData, ItineraryItem } from "@/types";
 
 const ItineraryPlanner = () => {
-  const [tripData, setTripData] = useState<TripData | null>(null);
-  const [itinerary, setItinerary] = useState<ItineraryItem[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
+  const navigate = useNavigate();
 
   const generateItinerary = async (data: TripData) => {
     setIsGenerating(true);
-    setTripData(data);
-    
+    navigate("/itinerary?loading=true");
+
     try {
       const result = await fetchItineraryFromGroq(data);
-      const withUUIDs = result.map(item => ({
-        ...item,
-        tempId: uuidv4(), // unique ID for drag-and-drop
-      }));
-      setItinerary(withUUIDs);
-    } catch (err) {
-      console.error("Error generating itinerary:", err);
-      alert("Failed to generate itinerary. Please try again.");
-      setItinerary([]);
-      setTripData(null);
-    } finally {
-      setIsGenerating(false);
+      const withUUIDs = result.map((item) => ({ ...item, tempId: uuidv4() }));
+
+      localStorage.setItem("tripData", JSON.stringify(data));
+      localStorage.setItem("itinerary", JSON.stringify(withUUIDs));
+      localStorage.setItem("loading", "false");
+    } catch (error) {
+      console.error("Error:", error);
+      localStorage.setItem("loading", "error");
     }
   };
 
-  const updateItinerary = (newItinerary: ItineraryItem[]) => {
-    setItinerary(newItinerary);
-  };
-
-  const resetPlanner = () => {
-    setTripData(null);
-    setItinerary([]);
-  };
 
   return (
     <div className="w-full max-w-7xl mx-auto">
-      {!tripData ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>Plan Your Trip</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <TripForm onSubmit={generateItinerary} />
-          </CardContent>
-        </Card>
-      ) : (
-        <ItineraryDisplay 
-          tripData={tripData}
-          itinerary={itinerary}
-          isGenerating={isGenerating}
-          onReset={resetPlanner}
-          onUpdateItinerary={updateItinerary}
-        />
-      )}
+      <Card>
+        <CardHeader>
+          <CardTitle>Plan Your Trip</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <TripForm onSubmit={generateItinerary} />
+        </CardContent>
+      </Card>
     </div>
   );
 };

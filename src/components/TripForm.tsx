@@ -13,7 +13,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { TripData } from "./ItineraryPlanner";
+import { TripData } from "@/types";
 
 const tripSchema = z.object({
   fromDestination: z.string().min(1, "From destination is required"),

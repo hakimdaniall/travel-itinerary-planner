@@ -6,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, DollarSign, Download, Trash2, Plane, Bed, Utensils, Car, MapPin } from "lucide-react";
 import { DragDropContext, Droppable, DropResult } from "@hello-pangea/dnd";
-import { TripData, ItineraryItem } from "./ItineraryPlanner";
+import { TripData, ItineraryItem } from "./../types";
 import ItineraryItemCard from "./ItineraryItemCard";
 import AddEditActivityDialog from "./AddEditActivityDialog";
 import ThemeToggle from "./ThemeToggle";
