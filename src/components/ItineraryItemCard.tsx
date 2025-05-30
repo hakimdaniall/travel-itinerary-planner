@@ -47,7 +47,7 @@ const ItineraryItemCard = ({ item, index, currency, onUpdateItem, onRemoveItem }
   };
 
   return (
-    <Draggable draggableId={item.id} index={index}>
+    <Draggable draggableId={item.tempId} index={index}>
       {(provided, snapshot) => (
         <Card
           ref={provided.innerRef}
@@ -75,7 +75,7 @@ const ItineraryItemCard = ({ item, index, currency, onUpdateItem, onRemoveItem }
                   size="sm"
                   onClick={(e) => {
                     e.stopPropagation();
-                    onRemoveItem(item.id);
+                    onRemoveItem(item.tempId);
                   }}
                   className="h-6 w-6 p-0 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
                 >

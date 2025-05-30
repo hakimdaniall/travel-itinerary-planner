@@ -1,4 +1,5 @@
 const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY;
+const GROQ_API_URL = import.meta.env.VITE_GROQ_API_URL;
 
 export const fetchItineraryFromGroq = async (tripData) => {
   const systemPrompt = `
@@ -8,9 +9,8 @@ export const fetchItineraryFromGroq = async (tripData) => {
 
   Each itinerary item must follow this format:
   {
-    "id": string,
     "day": number,
-    "time": string, // Format must be HH:mm (24-hour clock)
+    "time": string, // Format must be HH:mm:ss (24-hour clock)
     "activity": string,
     "location": string,
     "estimatedCost": number,
@@ -28,7 +28,7 @@ export const fetchItineraryFromGroq = async (tripData) => {
   `;
 
 
-  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+  const res = await fetch(`${GROQ_API_URL}/openai/v1/chat/completions`, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${GROQ_API_KEY}`,
@@ -52,5 +52,6 @@ export const fetchItineraryFromGroq = async (tripData) => {
 
   const data = await res.json();
   const parsed = JSON.parse(data.choices[0].message.content);
+  console.log('🚀 ~ fetchItineraryFromGroq ~ parsed:', parsed);
   return parsed.sampleItinerary;
 };

@@ -46,7 +46,7 @@ const AddEditActivityDialog = ({
 
   const handleSave = () => {
     const newItem: ItineraryItem = {
-      id: item?.id || `${Date.now()}-${Math.random()}`,
+      tempId: item?.tempId || `temp-${Date.now()}`, // Use existing ID or generate a new one
       day,
       time: formData.time,
       activity: formData.activity,

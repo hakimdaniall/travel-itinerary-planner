@@ -4,6 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import TripForm from "./TripForm";
 import ItineraryDisplay from "./ItineraryDisplay";
 import { fetchItineraryFromGroq } from "./../api/groqApi";
+import { v4 as uuidv4 } from 'uuid';
+
 export interface TripData {
   fromDestination: string;
   destinations: string[];
@@ -16,7 +18,7 @@ export interface TripData {
 }
 
 export interface ItineraryItem {
-  id: string;
+  tempId: string;
   day: number;
   time: string;
   activity: string;
@@ -36,7 +38,11 @@ const ItineraryPlanner = () => {
     
     try {
       const result = await fetchItineraryFromGroq(data);
-      setItinerary(result);
+      const withUUIDs = result.map(item => ({
+        ...item,
+        tempId: uuidv4(), // unique ID for drag-and-drop
+      }));
+      setItinerary(withUUIDs);
     } catch (err) {
       console.error("Error generating itinerary:", err);
       alert("Failed to generate itinerary. Please try again.");

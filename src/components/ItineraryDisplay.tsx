@@ -1,4 +1,4 @@
-import { format } from "date-fns";
+import { format, set } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +11,7 @@ import ItineraryItemCard from "./ItineraryItemCard";
 import AddEditActivityDialog from "./AddEditActivityDialog";
 import ThemeToggle from "./ThemeToggle";
 import { useToast } from "@/hooks/use-toast";
+import { createPlan } from "@/api/PlanApi";
 
 interface ItineraryDisplayProps {
   tripData: TripData;
@@ -30,7 +31,7 @@ const ItineraryDisplay = ({
   const { toast } = useToast();
 
   const addOrUpdateActivity = (item: ItineraryItem) => {
-    const existingIndex = itinerary.findIndex(i => i.id === item.id);
+    const existingIndex = itinerary.findIndex(i => i.tempId === item.tempId);
     
     if (existingIndex >= 0) {
       // Update existing item
@@ -53,8 +54,8 @@ const ItineraryDisplay = ({
   };
 
   const removeActivity = (itemId: string) => {
-    const item = itinerary.find(i => i.id === itemId);
-    const newItinerary = itinerary.filter(i => i.id !== itemId);
+    const item = itinerary.find(i => i.tempId === itemId);
+    const newItinerary = itinerary.filter(i => i.tempId !== itemId);
     onUpdateItinerary(newItinerary);
     toast({
       title: "Activity removed",
@@ -70,8 +71,21 @@ const ItineraryDisplay = ({
     });
   };
 
-  const downloadPDF = () => {
-    // Do nothing
+  const downloadPDF = async () => {
+    const payload = {
+      title: "Trip to Random",
+      itinerary_items: itinerary
+    }
+    try {
+      const result = await createPlan(payload);
+      toast({
+        title: "Successfully generated PDF",
+        description: `${result.title} has been generated successfully.`
+      })
+      console.log("PDF generated successfully:", result);
+    } catch (err) {
+      console.error("Error generating itinerary:", err);
+    }
   };
 
   const onDragEnd = (result: DropResult) => {
@@ -91,7 +105,7 @@ const ItineraryDisplay = ({
     const sourceDay = parseInt(source.droppableId);
     const destinationDay = parseInt(destination.droppableId);
     
-    const item = itinerary.find(item => item.id === draggableId);
+    const item = itinerary.find(item => item.tempId === draggableId);
     if (!item) {
       return;
     }
@@ -101,7 +115,7 @@ const ItineraryDisplay = ({
     
     // Create new itinerary with updated item
     const newItinerary = itinerary.map(i => 
-      i.id === draggableId ? updatedItem : i
+      i.tempId === draggableId ? updatedItem : i
     );
 
     onUpdateItinerary(newItinerary);
@@ -215,7 +229,7 @@ const ItineraryDisplay = ({
       <div className="flex flex-col sm:flex-row gap-2">
         <Button onClick={downloadPDF} className="flex-1 sm:flex-none">
           <Download className="h-4 w-4 mr-2" />
-          Download PDF
+          Save and Download
         </Button>
         <Button 
           variant="destructive" 
@@ -235,7 +249,7 @@ const ItineraryDisplay = ({
               <DollarSign className="h-5 w-5 text-green-600" />
               <div>
                 <p className="text-sm text-gray-600 dark:text-gray-400">Total Cost</p>
-                <p className="text-lg font-semibold">{tripData.currency} {totalCost}</p>
+                <p className="text-lg font-semibold">{tripData.currency} {totalCost.toFixed(2)}</p>
               </div>
             </div>
           </CardContent>
@@ -247,7 +261,7 @@ const ItineraryDisplay = ({
               <DollarSign className="h-5 w-5 text-blue-600" />
               <div>
                 <p className="text-sm text-gray-600 dark:text-gray-400">Budget</p>
-                <p className="text-lg font-semibold">{tripData.currency} {tripData.budget}</p>
+                <p className="text-lg font-semibold">{tripData.currency} {tripData.budget.toFixed(2)}</p>
               </div>
             </div>
           </CardContent>
@@ -260,7 +274,7 @@ const ItineraryDisplay = ({
               <div>
                 <p className="text-sm text-gray-600 dark:text-gray-400">Remaining</p>
                 <p className={`text-lg font-semibold ${remainingBudget >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  {tripData.currency} {remainingBudget}
+                  {tripData.currency} {remainingBudget.toFixed(2)}
                 </p>
               </div>
             </div>
@@ -299,7 +313,7 @@ const ItineraryDisplay = ({
                       >
                         {column.items.map((item, index) => (
                           <ItineraryItemCard
-                            key={item.id}
+                            key={item.tempId}
                             item={item}
                             index={index}
                             currency={tripData.currency}
@@ -367,7 +381,7 @@ const ItineraryDisplay = ({
                             .sort((a, b) => a.time.localeCompare(b.time))
                             .map((item, index) => (
                               <TableRow 
-                                key={item.id} 
+                                key={item.tempId} 
                                 className={`${index === dayColumn.items.length - 1 ? 'border-b-4 border-gray-200 dark:border-gray-700' : ''}`}
                               >
                                 <TableCell className="font-medium">{item.time}</TableCell>
@@ -386,7 +400,7 @@ const ItineraryDisplay = ({
                                   <Button
                                     variant="ghost"
                                     size="sm"
-                                    onClick={() => removeActivity(item.id)}
+                                    onClick={() => removeActivity(item.tempId)}
                                     className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
                                   >
                                     <Trash2 className="h-4 w-4" />
