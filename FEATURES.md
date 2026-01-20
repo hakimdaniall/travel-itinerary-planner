@@ -64,3 +64,29 @@ The saved JSON files contain:
 - **Share Plans**: Export and share your itinerary files with travel companions
 - **Backup**: Keep backup copies of your important travel plans
 - **Print**: Generate professional PDF documents for offline reference
+- **Flexible Planning**: Add more days as your trip plans evolve
+- **Easy Reorganization**: Drag and drop to quickly adjust your schedule
+
+## Add Days (NEW)
+
+- Click the **"Add Day"** button (located next to the Kanban/Table tabs)
+- Extends your trip by adding a new day column
+- The trip data is automatically updated to reflect the new duration
+- You can immediately start adding activities to the new day
+- Perfect for when your travel plans expand
+
+## Drag & Drop Days (NEW)
+
+- **Reorder Day Columns**: Grab any day header (look for the grip icon ⋮⋮) and drag to reorder days
+- All activities within each day move together with the column
+- Visual feedback shows when you're dragging a column (slight rotation and opacity)
+- Perfect for rearranging your trip schedule without manually moving activities
+- Works seamlessly in Kanban Board view
+
+## Drag & Drop Activities (ENHANCED)
+
+- **Move Activities Between Days**: Drag any activity card to a different day column
+- Activities can be reordered within the same day
+- Visual feedback shows valid drop zones with background color changes
+- Great for adjusting your schedule on the fly
+- Activities maintain all their details when moved

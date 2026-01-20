@@ -23,8 +23,15 @@ import {
   MapPin,
   Save,
   Upload,
+  Plus,
+  GripVertical,
 } from "lucide-react";
-import { DragDropContext, Droppable, DropResult } from "@hello-pangea/dnd";
+import {
+  DragDropContext,
+  Droppable,
+  Draggable,
+  DropResult,
+} from "@hello-pangea/dnd";
 import { TripData, ItineraryItem } from "./ItineraryPlanner";
 import ItineraryItemCard from "./ItineraryItemCard";
 import AddEditActivityDialog from "./AddEditActivityDialog";
@@ -39,6 +46,7 @@ interface ItineraryDisplayProps {
   isGenerating: boolean;
   onReset: () => void;
   onUpdateItinerary: (newItinerary: ItineraryItem[]) => void;
+  onUpdateTripData: (newTripData: TripData) => void;
 }
 
 const ItineraryDisplay = ({
@@ -47,6 +55,7 @@ const ItineraryDisplay = ({
   isGenerating,
   onReset,
   onUpdateItinerary,
+  onUpdateTripData,
 }: ItineraryDisplayProps) => {
   const { toast } = useToast();
 
@@ -90,6 +99,18 @@ const ItineraryDisplay = ({
     toast({
       title: "All activities cleared",
       description: "All activities have been removed from your itinerary",
+    });
+  };
+
+  const addDay = () => {
+    const newTripData = {
+      ...tripData,
+      days: tripData.days + 1,
+    };
+    onUpdateTripData(newTripData);
+    toast({
+      title: "Day added",
+      description: `Day ${tripData.days + 1} has been added to your itinerary`,
     });
   };
 
@@ -252,7 +273,7 @@ const ItineraryDisplay = ({
   };
 
   const onDragEnd = (result: DropResult) => {
-    const { destination, source, draggableId } = result;
+    const { destination, source, draggableId, type } = result;
 
     if (!destination) {
       return;
@@ -265,6 +286,20 @@ const ItineraryDisplay = ({
       return;
     }
 
+    // Handle day column reordering
+    if (type === "COLUMN") {
+      const newDayOrder = Array.from(
+        { length: tripData.days },
+        (_, i) => i + 1,
+      );
+      const [removed] = newDayOrder.splice(source.index, 1);
+      newDayOrder.splice(destination.index, 0, removed);
+
+      reorderDays(newDayOrder);
+      return;
+    }
+
+    // Handle activity dragging between days
     const sourceDay = parseInt(source.droppableId);
     const destinationDay = parseInt(destination.droppableId);
 
@@ -487,67 +522,104 @@ const ItineraryDisplay = ({
       </div>
 
       <Tabs defaultValue="kanban" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="kanban">Kanban Board</TabsTrigger>
-          <TabsTrigger value="table">Table View</TabsTrigger>
-        </TabsList>
+        <div className="flex items-center justify-between mb-4">
+          <TabsList className="grid w-auto grid-cols-2">
+            <TabsTrigger value="kanban">Kanban Board</TabsTrigger>
+            <TabsTrigger value="table">Table View</TabsTrigger>
+          </TabsList>
+          <Button onClick={addDay} variant="outline" size="sm">
+            <Plus className="h-4 w-4 mr-2" />
+            Add Day
+          </Button>
+        </div>
 
         <TabsContent value="kanban" className="space-y-4">
           <DragDropContext onDragEnd={onDragEnd}>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {dayColumns.map((column) => (
+            <Droppable
+              droppableId="all-columns"
+              direction="horizontal"
+              type="COLUMN"
+            >
+              {(provided) => (
                 <div
-                  key={column.day}
-                  className="bg-white dark:bg-gray-800 rounded-lg shadow-md border-t-4 border-t-blue-400 bg-blue-50 dark:bg-blue-900/20 min-h-[400px] flex flex-col"
+                  {...provided.droppableProps}
+                  ref={provided.innerRef}
+                  className="flex gap-6 overflow-x-auto pb-4"
+                  style={{ scrollbarWidth: "thin" }}
                 >
-                  <div className="p-4 border-b border-gray-100 dark:border-gray-700">
-                    <div className="flex items-center justify-between mb-3">
-                      <h3 className="font-semibold text-gray-800 dark:text-gray-200 text-lg">
-                        Day {column.day}
-                      </h3>
-                      <Badge
-                        variant="outline"
-                        className="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
-                      >
-                        {column.items.length}
-                      </Badge>
-                    </div>
-                  </div>
+                  {dayColumns.map((column, columnIndex) => (
+                    <Draggable
+                      key={column.day}
+                      draggableId={`day-${column.day}`}
+                      index={columnIndex}
+                    >
+                      {(provided, snapshot) => (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.draggableProps}
+                          className={`bg-white dark:bg-gray-800 rounded-lg shadow-md border-t-4 border-t-blue-400 bg-blue-50 dark:bg-blue-900/20 min-h-[500px] flex flex-col flex-shrink-0 w-[320px] ${
+                            snapshot.isDragging ? "opacity-75 rotate-2" : ""
+                          }`}
+                        >
+                          <div
+                            {...provided.dragHandleProps}
+                            className="p-4 border-b border-gray-100 dark:border-gray-700 cursor-grab active:cursor-grabbing"
+                          >
+                            <div className="flex items-center justify-between mb-3">
+                              <div className="flex items-center gap-2">
+                                <GripVertical className="h-5 w-5 text-gray-400" />
+                                <h3 className="font-semibold text-gray-800 dark:text-gray-200 text-lg">
+                                  Day {column.day}
+                                </h3>
+                              </div>
+                              <Badge
+                                variant="outline"
+                                className="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                              >
+                                {column.items.length}
+                              </Badge>
+                            </div>
+                          </div>
 
-                  <Droppable droppableId={column.day.toString()}>
-                    {(provided, snapshot) => (
-                      <div
-                        ref={provided.innerRef}
-                        {...provided.droppableProps}
-                        className={`flex-1 p-4 space-y-3 transition-colors ${
-                          snapshot.isDraggingOver
-                            ? "bg-gray-50 dark:bg-gray-700"
-                            : ""
-                        }`}
-                      >
-                        {column.items.map((item, index) => (
-                          <ItineraryItemCard
-                            key={item.id}
-                            item={item}
-                            index={index}
-                            currency={tripData.currency}
-                            onUpdateItem={addOrUpdateActivity}
-                            onRemoveItem={removeActivity}
-                          />
-                        ))}
-                        {provided.placeholder}
+                          <Droppable droppableId={column.day.toString()}>
+                            {(provided, snapshot) => (
+                              <div
+                                ref={provided.innerRef}
+                                {...provided.droppableProps}
+                                className={`flex-1 p-4 space-y-3 transition-colors overflow-y-auto ${
+                                  snapshot.isDraggingOver
+                                    ? "bg-gray-50 dark:bg-gray-700"
+                                    : ""
+                                }`}
+                              >
+                                {column.items.map((item, index) => (
+                                  <ItineraryItemCard
+                                    key={item.id}
+                                    item={item}
+                                    index={index}
+                                    currency={tripData.currency}
+                                    onUpdateItem={addOrUpdateActivity}
+                                    onRemoveItem={removeActivity}
+                                  />
+                                ))}
+                                {provided.placeholder}
 
-                        <AddEditActivityDialog
-                          day={column.day}
-                          currency={tripData.currency}
-                          onSave={addOrUpdateActivity}
-                        />
-                      </div>
-                    )}
-                  </Droppable>
+                                <AddEditActivityDialog
+                                  day={column.day}
+                                  currency={tripData.currency}
+                                  onSave={addOrUpdateActivity}
+                                />
+                              </div>
+                            )}
+                          </Droppable>
+                        </div>
+                      )}
+                    </Draggable>
+                  ))}
+                  {provided.placeholder}
                 </div>
-              ))}
-            </div>
+              )}
+            </Droppable>
           </DragDropContext>
         </TabsContent>
         <TabsContent value="table" className="space-y-4">

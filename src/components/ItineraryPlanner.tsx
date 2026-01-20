@@ -54,6 +54,10 @@ const ItineraryPlanner = () => {
     setItinerary(newItinerary);
   };
 
+  const updateTripData = (newTripData: TripData) => {
+    setTripData(newTripData);
+  };
+
   const resetPlanner = () => {
     setTripData(null);
     setItinerary([]);
@@ -130,6 +134,7 @@ const ItineraryPlanner = () => {
           isGenerating={isGenerating}
           onReset={resetPlanner}
           onUpdateItinerary={updateItinerary}
+          onUpdateTripData={updateTripData}
         />
       )}
     </div>
