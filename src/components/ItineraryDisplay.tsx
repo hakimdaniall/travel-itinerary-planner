@@ -405,15 +405,15 @@ const ItineraryDisplay = ({
   const getTypeColor = (type: string) => {
     switch (type) {
       case "flight":
-        return "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900 dark:text-blue-300";
+        return "bg-sky-100 text-sky-700 border-sky-200 dark:bg-sky-900/30 dark:text-sky-400 dark:border-sky-800";
       case "accommodation":
-        return "bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900 dark:text-purple-300";
+        return "bg-violet-100 text-violet-700 border-violet-200 dark:bg-violet-900/30 dark:text-violet-400 dark:border-violet-800";
       case "meal":
-        return "bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900 dark:text-orange-300";
+        return "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800";
       case "transport":
-        return "bg-green-100 text-green-800 border-green-200 dark:bg-green-900 dark:text-green-300";
+        return "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800";
       default:
-        return "bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-800 dark:text-gray-300";
+        return "bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700";
     }
   };
 
@@ -530,14 +530,14 @@ const ItineraryDisplay = ({
         </div>
 
         <div className="flex flex-col sm:flex-row gap-2">
-          <Button onClick={downloadPDF} className="flex-1 sm:flex-none">
+          <Button onClick={downloadPDF} className="flex-1 sm:flex-none bg-slate-900 hover:bg-slate-800 dark:bg-slate-50 dark:hover:bg-slate-200 dark:text-slate-900">
             <Download className="h-4 w-4 mr-2" />
             Export as PDF
           </Button>
           <Button
             onClick={handleSaveClick}
             variant="outline"
-            className="flex-1 sm:flex-none"
+            className="flex-1 sm:flex-none border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-900"
           >
             <Save className="h-4 w-4 mr-2" />
             Save Project
@@ -545,7 +545,7 @@ const ItineraryDisplay = ({
           <Button
             onClick={loadItinerary}
             variant="outline"
-            className="flex-1 sm:flex-none"
+            className="flex-1 sm:flex-none border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-900"
           >
             <Upload className="h-4 w-4 mr-2" />
             Load Project
@@ -562,15 +562,17 @@ const ItineraryDisplay = ({
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-2">
-                <DollarSign className="h-5 w-5 text-green-600" />
+          <Card className="border border-slate-200 dark:border-slate-800">
+            <CardContent className="p-6">
+              <div className="flex items-center space-x-3">
+                <div className="p-3 rounded-lg bg-emerald-100 dark:bg-emerald-900/30">
+                  <DollarSign className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                </div>
                 <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                  <p className="text-sm text-slate-500 dark:text-slate-400 mb-1">
                     Total Cost
                   </p>
-                  <p className="text-lg font-semibold">
+                  <p className="text-2xl font-semibold text-slate-900 dark:text-slate-50">
                     {tripData.currency} {totalCost}
                   </p>
                 </div>
@@ -578,15 +580,17 @@ const ItineraryDisplay = ({
             </CardContent>
           </Card>
 
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-2">
-                <DollarSign className="h-5 w-5 text-blue-600" />
+          <Card className="border border-slate-200 dark:border-slate-800">
+            <CardContent className="p-6">
+              <div className="flex items-center space-x-3">
+                <div className="p-3 rounded-lg bg-blue-100 dark:bg-blue-900/30">
+                  <DollarSign className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                </div>
                 <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                  <p className="text-sm text-slate-500 dark:text-slate-400 mb-1">
                     Budget
                   </p>
-                  <p className="text-lg font-semibold">
+                  <p className="text-2xl font-semibold text-slate-900 dark:text-slate-50">
                     {tripData.currency} {tripData.budget}
                   </p>
                 </div>
@@ -594,19 +598,17 @@ const ItineraryDisplay = ({
             </CardContent>
           </Card>
 
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-2">
-                <DollarSign
-                  className={`h-5 w-5 ${remainingBudget >= 0 ? "text-green-600" : "text-red-600"}`}
-                />
+          <Card className="border border-slate-200 dark:border-slate-800">
+            <CardContent className="p-6">
+              <div className="flex items-center space-x-3">
+                <div className={`p-3 rounded-lg ${remainingBudget >= 0 ? 'bg-teal-100 dark:bg-teal-900/30' : 'bg-rose-100 dark:bg-rose-900/30'}`}>
+                  <DollarSign className={`h-5 w-5 ${remainingBudget >= 0 ? 'text-teal-600 dark:text-teal-400' : 'text-rose-600 dark:text-rose-400'}`} />
+                </div>
                 <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                  <p className="text-sm text-slate-500 dark:text-slate-400 mb-1">
                     Remaining
                   </p>
-                  <p
-                    className={`text-lg font-semibold ${remainingBudget >= 0 ? "text-green-600" : "text-red-600"}`}
-                  >
+                  <p className={`text-2xl font-semibold ${remainingBudget >= 0 ? 'text-teal-600 dark:text-teal-400' : 'text-rose-600 dark:text-rose-400'}`}>
                     {tripData.currency} {remainingBudget}
                   </p>
                 </div>
@@ -651,24 +653,24 @@ const ItineraryDisplay = ({
                           <div
                             ref={provided.innerRef}
                             {...provided.draggableProps}
-                            className={`bg-white dark:bg-gray-800 rounded-lg shadow-md border-t-4 border-t-blue-400 bg-blue-50 dark:bg-blue-900/20 min-h-[500px] flex flex-col flex-shrink-0 w-[320px] ${
+                            className={`bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-slate-200 dark:border-slate-800 hover:shadow-md transition-shadow min-h-[500px] flex flex-col flex-shrink-0 w-[320px] ${
                               snapshot.isDragging ? "opacity-75 rotate-2" : ""
                             }`}
                           >
                             <div
                               {...provided.dragHandleProps}
-                              className="p-4 border-b border-gray-100 dark:border-gray-700 cursor-grab active:cursor-grabbing"
+                              className="p-4 border-b border-slate-200 dark:border-slate-800 cursor-grab active:cursor-grabbing bg-slate-50 dark:bg-slate-900/50"
                             >
                               <div className="flex items-center justify-between mb-3">
                                 <div className="flex items-center gap-2">
-                                  <GripVertical className="h-5 w-5 text-gray-400" />
-                                  <h3 className="font-semibold text-gray-800 dark:text-gray-200 text-lg">
+                                  <GripVertical className="h-5 w-5 text-slate-400 dark:text-slate-600" />
+                                  <h3 className="font-semibold text-slate-900 dark:text-slate-50 text-lg">
                                     Day {column.day}
                                   </h3>
                                 </div>
                                 <Badge
                                   variant="outline"
-                                  className="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                                  className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700"
                                 >
                                   {column.items.length}
                                 </Badge>
@@ -682,7 +684,7 @@ const ItineraryDisplay = ({
                                   {...provided.droppableProps}
                                   className={`flex-1 p-4 space-y-3 transition-colors overflow-y-auto ${
                                     snapshot.isDraggingOver
-                                      ? "bg-gray-50 dark:bg-gray-700"
+                                      ? "bg-slate-50 dark:bg-slate-800/50"
                                       : ""
                                   }`}
                                 >
@@ -739,16 +741,16 @@ const ItineraryDisplay = ({
                         <>
                           <TableRow
                             key={`day-${dayColumn.day}`}
-                            className="bg-blue-50 dark:bg-blue-900/20 border-b-2 border-blue-200 dark:border-blue-800"
+                            className="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-800"
                           >
                             <TableCell colSpan={6} className="py-4">
-                              <div className="flex items-center gap-2">
-                                <h3 className="text-lg font-bold text-blue-900 dark:text-blue-100">
+                              <div className="flex items-center gap-3">
+                                <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-50">
                                   Day {dayColumn.day}
                                 </h3>
                                 <Badge
                                   variant="outline"
-                                  className="bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-800 dark:text-blue-200"
+                                  className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700"
                                 >
                                   {dayColumn.items.length} activities
                                 </Badge>
