@@ -530,7 +530,10 @@ const ItineraryDisplay = ({
         </div>
 
         <div className="flex flex-col sm:flex-row gap-2">
-          <Button onClick={downloadPDF} className="flex-1 sm:flex-none bg-slate-900 hover:bg-slate-800 dark:bg-slate-50 dark:hover:bg-slate-200 dark:text-slate-900">
+          <Button
+            onClick={downloadPDF}
+            className="flex-1 sm:flex-none bg-slate-900 hover:bg-slate-800 dark:bg-slate-50 dark:hover:bg-slate-200 dark:text-slate-900"
+          >
             <Download className="h-4 w-4 mr-2" />
             Export as PDF
           </Button>
@@ -601,14 +604,20 @@ const ItineraryDisplay = ({
           <Card className="border border-slate-200 dark:border-slate-800">
             <CardContent className="p-6">
               <div className="flex items-center space-x-3">
-                <div className={`p-3 rounded-lg ${remainingBudget >= 0 ? 'bg-teal-100 dark:bg-teal-900/30' : 'bg-rose-100 dark:bg-rose-900/30'}`}>
-                  <DollarSign className={`h-5 w-5 ${remainingBudget >= 0 ? 'text-teal-600 dark:text-teal-400' : 'text-rose-600 dark:text-rose-400'}`} />
+                <div
+                  className={`p-3 rounded-lg ${remainingBudget >= 0 ? "bg-teal-100 dark:bg-teal-900/30" : "bg-rose-100 dark:bg-rose-900/30"}`}
+                >
+                  <DollarSign
+                    className={`h-5 w-5 ${remainingBudget >= 0 ? "text-teal-600 dark:text-teal-400" : "text-rose-600 dark:text-rose-400"}`}
+                  />
                 </div>
                 <div>
                   <p className="text-sm text-slate-500 dark:text-slate-400 mb-1">
                     Remaining
                   </p>
-                  <p className={`text-2xl font-semibold ${remainingBudget >= 0 ? 'text-teal-600 dark:text-teal-400' : 'text-rose-600 dark:text-rose-400'}`}>
+                  <p
+                    className={`text-2xl font-semibold ${remainingBudget >= 0 ? "text-teal-600 dark:text-teal-400" : "text-rose-600 dark:text-rose-400"}`}
+                  >
                     {tripData.currency} {remainingBudget}
                   </p>
                 </div>
