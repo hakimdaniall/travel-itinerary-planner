@@ -25,6 +25,7 @@ import {
   Upload,
   Plus,
   GripVertical,
+  X,
 } from "lucide-react";
 import {
   Dialog,
@@ -36,7 +37,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import {
   DragDropContext,
   Droppable,
@@ -76,6 +77,7 @@ const ItineraryDisplay = ({
   const [loadedCreatorName, setLoadedCreatorName] = useState<string | null>(
     initialCreatorName || null,
   );
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const addOrUpdateActivity = (item: ItineraryItem) => {
     const existingIndex = itinerary.findIndex((i) => i.id === item.id);
@@ -129,6 +131,41 @@ const ItineraryDisplay = ({
     toast({
       title: "Day added",
       description: `Day ${tripData.days + 1} has been added to your itinerary`,
+    });
+
+    // Scroll to the rightmost position after a short delay to allow render
+    setTimeout(() => {
+      if (scrollContainerRef.current) {
+        scrollContainerRef.current.scrollTo({
+          left: scrollContainerRef.current.scrollWidth,
+          behavior: "smooth",
+        });
+      }
+    }, 100);
+  };
+
+  const deleteDay = (dayNumber: number) => {
+    // Remove all activities for this day
+    const newItinerary = itinerary.filter((item) => item.day !== dayNumber);
+
+    // Renumber remaining days
+    const renumberedItinerary = newItinerary.map((item) => ({
+      ...item,
+      day: item.day > dayNumber ? item.day - 1 : item.day,
+    }));
+
+    // Update trip data
+    const newTripData = {
+      ...tripData,
+      days: tripData.days - 1,
+    };
+
+    onUpdateItinerary(renumberedItinerary);
+    onUpdateTripData(newTripData);
+
+    toast({
+      title: "Day deleted",
+      description: `Day ${dayNumber} has been removed from your itinerary`,
     });
   };
 
@@ -648,7 +685,10 @@ const ItineraryDisplay = ({
                 {(provided) => (
                   <div
                     {...provided.droppableProps}
-                    ref={provided.innerRef}
+                    ref={(el) => {
+                      provided.innerRef(el);
+                      scrollContainerRef.current = el;
+                    }}
                     className="flex gap-6 overflow-x-auto pb-4"
                     style={{ scrollbarWidth: "thin" }}
                   >
@@ -677,12 +717,27 @@ const ItineraryDisplay = ({
                                     Day {column.day}
                                   </h3>
                                 </div>
-                                <Badge
-                                  variant="outline"
-                                  className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700"
-                                >
-                                  {column.items.length}
-                                </Badge>
+                                <div className="flex items-center gap-2">
+                                  <Badge
+                                    variant="outline"
+                                    className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700"
+                                  >
+                                    {column.items.length}
+                                  </Badge>
+                                  {tripData.days > 1 && (
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-7 w-7 p-0 hover:bg-rose-100 dark:hover:bg-rose-900/30 hover:text-rose-600 dark:hover:text-rose-400"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        deleteDay(column.day);
+                                      }}
+                                    >
+                                      <X className="h-4 w-4" />
+                                    </Button>
+                                  )}
+                                </div>
                               </div>
                             </div>
 
@@ -753,16 +808,29 @@ const ItineraryDisplay = ({
                             className="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-800"
                           >
                             <TableCell colSpan={6} className="py-4">
-                              <div className="flex items-center gap-3">
-                                <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-50">
-                                  Day {dayColumn.day}
-                                </h3>
-                                <Badge
-                                  variant="outline"
-                                  className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700"
-                                >
-                                  {dayColumn.items.length} activities
-                                </Badge>
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                  <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-50">
+                                    Day {dayColumn.day}
+                                  </h3>
+                                  <Badge
+                                    variant="outline"
+                                    className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700"
+                                  >
+                                    {dayColumn.items.length} activities
+                                  </Badge>
+                                </div>
+                                {tripData.days > 1 && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="hover:bg-rose-100 dark:hover:bg-rose-900/30 hover:text-rose-600 dark:hover:text-rose-400"
+                                    onClick={() => deleteDay(dayColumn.day)}
+                                  >
+                                    <X className="h-4 w-4 mr-2" />
+                                    Delete Day
+                                  </Button>
+                                )}
                               </div>
                             </TableCell>
                           </TableRow>
