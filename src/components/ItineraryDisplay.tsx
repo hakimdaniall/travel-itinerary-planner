@@ -2,15 +2,36 @@ import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, DollarSign, Download, Trash2, Plane, Bed, Utensils, Car, MapPin } from "lucide-react";
+import {
+  ArrowLeft,
+  DollarSign,
+  Download,
+  Trash2,
+  Plane,
+  Bed,
+  Utensils,
+  Car,
+  MapPin,
+  Save,
+  Upload,
+} from "lucide-react";
 import { DragDropContext, Droppable, DropResult } from "@hello-pangea/dnd";
 import { TripData, ItineraryItem } from "./ItineraryPlanner";
 import ItineraryItemCard from "./ItineraryItemCard";
 import AddEditActivityDialog from "./AddEditActivityDialog";
 import ThemeToggle from "./ThemeToggle";
 import { useToast } from "@/hooks/use-toast";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 interface ItineraryDisplayProps {
   tripData: TripData;
@@ -20,18 +41,18 @@ interface ItineraryDisplayProps {
   onUpdateItinerary: (newItinerary: ItineraryItem[]) => void;
 }
 
-const ItineraryDisplay = ({ 
-  tripData, 
-  itinerary, 
-  isGenerating, 
+const ItineraryDisplay = ({
+  tripData,
+  itinerary,
+  isGenerating,
   onReset,
-  onUpdateItinerary 
+  onUpdateItinerary,
 }: ItineraryDisplayProps) => {
   const { toast } = useToast();
 
   const addOrUpdateActivity = (item: ItineraryItem) => {
-    const existingIndex = itinerary.findIndex(i => i.id === item.id);
-    
+    const existingIndex = itinerary.findIndex((i) => i.id === item.id);
+
     if (existingIndex >= 0) {
       // Update existing item
       const newItinerary = [...itinerary];
@@ -53,12 +74,14 @@ const ItineraryDisplay = ({
   };
 
   const removeActivity = (itemId: string) => {
-    const item = itinerary.find(i => i.id === itemId);
-    const newItinerary = itinerary.filter(i => i.id !== itemId);
+    const item = itinerary.find((i) => i.id === itemId);
+    const newItinerary = itinerary.filter((i) => i.id !== itemId);
     onUpdateItinerary(newItinerary);
     toast({
       title: "Activity removed",
-      description: item ? `"${item.activity}" has been removed` : "Activity removed",
+      description: item
+        ? `"${item.activity}" has been removed`
+        : "Activity removed",
     });
   };
 
@@ -71,7 +94,161 @@ const ItineraryDisplay = ({
   };
 
   const downloadPDF = () => {
-    // Do nothing
+    const doc = new jsPDF();
+
+    // Add title
+    doc.setFontSize(18);
+    doc.text("Travel Itinerary", 14, 20);
+
+    // Add trip details
+    doc.setFontSize(11);
+    doc.text(`Destinations: ${tripData.destinations.join(" → ")}`, 14, 30);
+    doc.text(
+      `Duration: ${tripData.days} days (${format(tripData.startDate, "MMM dd")} - ${format(tripData.endDate, "MMM dd, yyyy")})`,
+      14,
+      36,
+    );
+    doc.text(`Budget: ${tripData.currency} ${tripData.budget}`, 14, 42);
+    doc.text(`Total Cost: ${tripData.currency} ${totalCost}`, 14, 48);
+    doc.text(`Remaining: ${tripData.currency} ${remainingBudget}`, 14, 54);
+
+    // Prepare table data
+    const tableData: any[] = [];
+
+    dayColumns.forEach((dayColumn) => {
+      // Add day header
+      tableData.push([
+        {
+          content: `Day ${dayColumn.day}`,
+          colSpan: 5,
+          styles: {
+            fillColor: [59, 130, 246],
+            textColor: [255, 255, 255],
+            fontStyle: "bold",
+          },
+        },
+      ]);
+
+      // Add activities for this day
+      if (dayColumn.items.length === 0) {
+        tableData.push(["", "No activities planned", "", "", ""]);
+      } else {
+        dayColumn.items
+          .sort((a, b) => a.time.localeCompare(b.time))
+          .forEach((item) => {
+            tableData.push([
+              item.time,
+              item.activity,
+              item.location,
+              item.estimatedCost > 0
+                ? `${tripData.currency} ${item.estimatedCost}`
+                : "Free",
+              item.type.charAt(0).toUpperCase() + item.type.slice(1),
+            ]);
+          });
+      }
+    });
+
+    // Add table
+    autoTable(doc, {
+      head: [["Time", "Activity", "Location", "Cost", "Type"]],
+      body: tableData,
+      startY: 60,
+      styles: { fontSize: 9 },
+      headStyles: { fillColor: [31, 41, 55] },
+      columnStyles: {
+        0: { cellWidth: 20 },
+        1: { cellWidth: 50 },
+        2: { cellWidth: 40 },
+        3: { cellWidth: 25 },
+        4: { cellWidth: 25 },
+      },
+    });
+
+    // Save the PDF
+    const fileName = `itinerary-${tripData.destinations[0].replace(/\s+/g, "-").toLowerCase()}-${format(new Date(), "yyyy-MM-dd")}.pdf`;
+    doc.save(fileName);
+
+    toast({
+      title: "PDF Downloaded",
+      description: `Your itinerary has been saved as ${fileName}`,
+    });
+  };
+
+  const saveItinerary = () => {
+    const dataToSave = {
+      version: "1.0",
+      savedAt: new Date().toISOString(),
+      tripData: {
+        ...tripData,
+        startDate: tripData.startDate.toISOString(),
+        endDate: tripData.endDate.toISOString(),
+      },
+      itinerary: itinerary,
+    };
+
+    const jsonString = JSON.stringify(dataToSave, null, 2);
+    const blob = new Blob([jsonString], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    const fileName = `itinerary-${tripData.destinations[0].replace(/\s+/g, "-").toLowerCase()}-${format(new Date(), "yyyy-MM-dd")}.json`;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    toast({
+      title: "Itinerary Saved",
+      description: `Your itinerary has been saved as ${fileName}`,
+    });
+  };
+
+  const loadItinerary = () => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".json";
+    input.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          try {
+            const data = JSON.parse(event.target?.result as string);
+
+            // Validate the data structure
+            if (!data.tripData || !data.itinerary) {
+              throw new Error("Invalid itinerary file format");
+            }
+
+            // Convert date strings back to Date objects
+            const loadedTripData = {
+              ...data.tripData,
+              startDate: new Date(data.tripData.startDate),
+              endDate: new Date(data.tripData.endDate),
+            };
+
+            // Update the itinerary
+            onUpdateItinerary(data.itinerary);
+
+            toast({
+              title: "Itinerary Loaded",
+              description: "Your saved itinerary has been loaded successfully",
+            });
+          } catch (error) {
+            toast({
+              title: "Error Loading File",
+              description:
+                "The file could not be loaded. Please make sure it's a valid itinerary file.",
+              variant: "destructive",
+            });
+          }
+        };
+        reader.readAsText(file);
+      }
+    };
+    input.click();
   };
 
   const onDragEnd = (result: DropResult) => {
@@ -90,18 +267,18 @@ const ItineraryDisplay = ({
 
     const sourceDay = parseInt(source.droppableId);
     const destinationDay = parseInt(destination.droppableId);
-    
-    const item = itinerary.find(item => item.id === draggableId);
+
+    const item = itinerary.find((item) => item.id === draggableId);
     if (!item) {
       return;
     }
 
     // Update the item's day
     const updatedItem = { ...item, day: destinationDay };
-    
+
     // Create new itinerary with updated item
-    const newItinerary = itinerary.map(i => 
-      i.id === draggableId ? updatedItem : i
+    const newItinerary = itinerary.map((i) =>
+      i.id === draggableId ? updatedItem : i,
     );
 
     onUpdateItinerary(newItinerary);
@@ -117,9 +294,9 @@ const ItineraryDisplay = ({
       dayMapping[oldDay] = index + 1;
     });
 
-    const newItinerary = itinerary.map(item => ({
+    const newItinerary = itinerary.map((item) => ({
       ...item,
-      day: dayMapping[item.day]
+      day: dayMapping[item.day],
     }));
 
     onUpdateItinerary(newItinerary);
@@ -159,23 +336,29 @@ const ItineraryDisplay = ({
     }
   };
 
-  const totalCost = itinerary.reduce((sum, item) => sum + item.estimatedCost, 0);
+  const totalCost = itinerary.reduce(
+    (sum, item) => sum + item.estimatedCost,
+    0,
+  );
   const remainingBudget = tripData.budget - totalCost;
 
-  const groupedByDay = itinerary.reduce((acc, item) => {
-    if (!acc[item.day]) {
-      acc[item.day] = [];
-    }
-    acc[item.day].push(item);
-    return acc;
-  }, {} as Record<number, ItineraryItem[]>);
+  const groupedByDay = itinerary.reduce(
+    (acc, item) => {
+      if (!acc[item.day]) {
+        acc[item.day] = [];
+      }
+      acc[item.day].push(item);
+      return acc;
+    },
+    {} as Record<number, ItineraryItem[]>,
+  );
 
   // Create columns for all days in the trip
   const dayColumns = Array.from({ length: tripData.days }, (_, index) => {
     const dayNumber = index + 1;
     return {
       day: dayNumber,
-      items: groupedByDay[dayNumber] || []
+      items: groupedByDay[dayNumber] || [],
     };
   });
 
@@ -184,8 +367,12 @@ const ItineraryDisplay = ({
       <div className="flex items-center justify-center py-12">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <h3 className="text-lg font-semibold mb-2">Generating Your Itinerary</h3>
-          <p className="text-gray-600 dark:text-gray-400">This may take a few moments...</p>
+          <h3 className="text-lg font-semibold mb-2">
+            Generating Your Itinerary
+          </h3>
+          <p className="text-gray-600 dark:text-gray-400">
+            This may take a few moments...
+          </p>
         </div>
       </div>
     );
@@ -201,13 +388,14 @@ const ItineraryDisplay = ({
           </Button>
           <ThemeToggle />
         </div>
-        
+
         <div className="text-left sm:text-right">
           <p className="text-sm text-gray-600 dark:text-gray-400">
             {tripData.destinations.join(" → ")} • {tripData.days} days
           </p>
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            {format(tripData.startDate, "MMM dd")} - {format(tripData.endDate, "MMM dd, yyyy")}
+            {format(tripData.startDate, "MMM dd")} -{" "}
+            {format(tripData.endDate, "MMM dd, yyyy")}
           </p>
         </div>
       </div>
@@ -217,8 +405,24 @@ const ItineraryDisplay = ({
           <Download className="h-4 w-4 mr-2" />
           Download PDF
         </Button>
-        <Button 
-          variant="destructive" 
+        <Button
+          onClick={saveItinerary}
+          variant="outline"
+          className="flex-1 sm:flex-none"
+        >
+          <Save className="h-4 w-4 mr-2" />
+          Save Itinerary
+        </Button>
+        <Button
+          onClick={loadItinerary}
+          variant="outline"
+          className="flex-1 sm:flex-none"
+        >
+          <Upload className="h-4 w-4 mr-2" />
+          Load Itinerary
+        </Button>
+        <Button
+          variant="destructive"
           onClick={clearAllActivities}
           className="flex-1 sm:flex-none"
           disabled={itinerary.length === 0}
@@ -234,8 +438,12 @@ const ItineraryDisplay = ({
             <div className="flex items-center space-x-2">
               <DollarSign className="h-5 w-5 text-green-600" />
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Total Cost</p>
-                <p className="text-lg font-semibold">{tripData.currency} {totalCost}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Total Cost
+                </p>
+                <p className="text-lg font-semibold">
+                  {tripData.currency} {totalCost}
+                </p>
               </div>
             </div>
           </CardContent>
@@ -246,8 +454,12 @@ const ItineraryDisplay = ({
             <div className="flex items-center space-x-2">
               <DollarSign className="h-5 w-5 text-blue-600" />
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Budget</p>
-                <p className="text-lg font-semibold">{tripData.currency} {tripData.budget}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Budget
+                </p>
+                <p className="text-lg font-semibold">
+                  {tripData.currency} {tripData.budget}
+                </p>
               </div>
             </div>
           </CardContent>
@@ -256,10 +468,16 @@ const ItineraryDisplay = ({
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center space-x-2">
-              <DollarSign className={`h-5 w-5 ${remainingBudget >= 0 ? 'text-green-600' : 'text-red-600'}`} />
+              <DollarSign
+                className={`h-5 w-5 ${remainingBudget >= 0 ? "text-green-600" : "text-red-600"}`}
+              />
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Remaining</p>
-                <p className={`text-lg font-semibold ${remainingBudget >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Remaining
+                </p>
+                <p
+                  className={`text-lg font-semibold ${remainingBudget >= 0 ? "text-green-600" : "text-red-600"}`}
+                >
                   {tripData.currency} {remainingBudget}
                 </p>
               </div>
@@ -268,7 +486,7 @@ const ItineraryDisplay = ({
         </Card>
       </div>
 
-       <Tabs defaultValue="kanban" className="w-full">
+      <Tabs defaultValue="kanban" className="w-full">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="kanban">Kanban Board</TabsTrigger>
           <TabsTrigger value="table">Table View</TabsTrigger>
@@ -278,11 +496,19 @@ const ItineraryDisplay = ({
           <DragDropContext onDragEnd={onDragEnd}>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {dayColumns.map((column) => (
-                <div key={column.day} className="bg-white dark:bg-gray-800 rounded-lg shadow-md border-t-4 border-t-blue-400 bg-blue-50 dark:bg-blue-900/20 min-h-[400px] flex flex-col">
+                <div
+                  key={column.day}
+                  className="bg-white dark:bg-gray-800 rounded-lg shadow-md border-t-4 border-t-blue-400 bg-blue-50 dark:bg-blue-900/20 min-h-[400px] flex flex-col"
+                >
                   <div className="p-4 border-b border-gray-100 dark:border-gray-700">
                     <div className="flex items-center justify-between mb-3">
-                      <h3 className="font-semibold text-gray-800 dark:text-gray-200 text-lg">Day {column.day}</h3>
-                      <Badge variant="outline" className="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300">
+                      <h3 className="font-semibold text-gray-800 dark:text-gray-200 text-lg">
+                        Day {column.day}
+                      </h3>
+                      <Badge
+                        variant="outline"
+                        className="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                      >
                         {column.items.length}
                       </Badge>
                     </div>
@@ -294,7 +520,9 @@ const ItineraryDisplay = ({
                         ref={provided.innerRef}
                         {...provided.droppableProps}
                         className={`flex-1 p-4 space-y-3 transition-colors ${
-                          snapshot.isDraggingOver ? "bg-gray-50 dark:bg-gray-700" : ""
+                          snapshot.isDraggingOver
+                            ? "bg-gray-50 dark:bg-gray-700"
+                            : ""
                         }`}
                       >
                         {column.items.map((item, index) => (
@@ -308,7 +536,7 @@ const ItineraryDisplay = ({
                           />
                         ))}
                         {provided.placeholder}
-                        
+
                         <AddEditActivityDialog
                           day={column.day}
                           currency={tripData.currency}
@@ -343,22 +571,31 @@ const ItineraryDisplay = ({
                   <TableBody>
                     {dayColumns.map((dayColumn) => (
                       <>
-                        <TableRow key={`day-${dayColumn.day}`} className="bg-blue-50 dark:bg-blue-900/20 border-b-2 border-blue-200 dark:border-blue-800">
+                        <TableRow
+                          key={`day-${dayColumn.day}`}
+                          className="bg-blue-50 dark:bg-blue-900/20 border-b-2 border-blue-200 dark:border-blue-800"
+                        >
                           <TableCell colSpan={6} className="py-4">
                             <div className="flex items-center gap-2">
                               <h3 className="text-lg font-bold text-blue-900 dark:text-blue-100">
                                 Day {dayColumn.day}
                               </h3>
-                              <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-800 dark:text-blue-200">
+                              <Badge
+                                variant="outline"
+                                className="bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-800 dark:text-blue-200"
+                              >
                                 {dayColumn.items.length} activities
                               </Badge>
                             </div>
                           </TableCell>
                         </TableRow>
-                        
+
                         {dayColumn.items.length === 0 ? (
                           <TableRow key={`day-${dayColumn.day}-empty`}>
-                            <TableCell colSpan={6} className="py-6 text-center text-gray-500 dark:text-gray-400 italic">
+                            <TableCell
+                              colSpan={6}
+                              className="py-6 text-center text-gray-500 dark:text-gray-400 italic"
+                            >
                               No activities planned for this day
                             </TableCell>
                           </TableRow>
@@ -366,20 +603,29 @@ const ItineraryDisplay = ({
                           dayColumn.items
                             .sort((a, b) => a.time.localeCompare(b.time))
                             .map((item, index) => (
-                              <TableRow 
-                                key={item.id} 
-                                className={`${index === dayColumn.items.length - 1 ? 'border-b-4 border-gray-200 dark:border-gray-700' : ''}`}
+                              <TableRow
+                                key={item.id}
+                                className={`${index === dayColumn.items.length - 1 ? "border-b-4 border-gray-200 dark:border-gray-700" : ""}`}
                               >
-                                <TableCell className="font-medium">{item.time}</TableCell>
+                                <TableCell className="font-medium">
+                                  {item.time}
+                                </TableCell>
                                 <TableCell>{item.activity}</TableCell>
                                 <TableCell>{item.location}</TableCell>
                                 <TableCell>
-                                  {item.estimatedCost > 0 ? `${tripData.currency} ${item.estimatedCost}` : 'Free'}
+                                  {item.estimatedCost > 0
+                                    ? `${tripData.currency} ${item.estimatedCost}`
+                                    : "Free"}
                                 </TableCell>
                                 <TableCell>
-                                  <Badge variant="outline" className={getTypeColor(item.type)}>
+                                  <Badge
+                                    variant="outline"
+                                    className={getTypeColor(item.type)}
+                                  >
                                     {getTypeIcon(item.type)}
-                                    <span className="ml-1 capitalize">{item.type}</span>
+                                    <span className="ml-1 capitalize">
+                                      {item.type}
+                                    </span>
                                   </Badge>
                                 </TableCell>
                                 <TableCell>
