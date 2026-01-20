@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { format } from "date-fns";
-import { CalendarIcon, Plus, X } from "lucide-react";
+import { CalendarIcon, Plus, X, Sparkles, Wrench } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -368,6 +368,7 @@ const TripForm = ({ onSubmit, onCustomCreate }: TripFormProps) => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Button type="submit" className="w-full" size="lg">
+          <Sparkles className="h-5 w-5 mr-2" />
           Generate with AI
         </Button>
         <Button
@@ -377,6 +378,7 @@ const TripForm = ({ onSubmit, onCustomCreate }: TripFormProps) => {
           className="w-full"
           size="lg"
         >
+          <Wrench className="h-5 w-5 mr-2" />
           Build Custom Itinerary
         </Button>
       </div>
