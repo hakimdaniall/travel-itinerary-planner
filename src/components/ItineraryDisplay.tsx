@@ -27,6 +27,17 @@ import {
   GripVertical,
 } from "lucide-react";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useState } from "react";
+import {
   DragDropContext,
   Droppable,
   Draggable,
@@ -58,6 +69,11 @@ const ItineraryDisplay = ({
   onUpdateTripData,
 }: ItineraryDisplayProps) => {
   const { toast } = useToast();
+  const [showSaveDialog, setShowSaveDialog] = useState(false);
+  const [creatorName, setCreatorName] = useState("");
+  const [loadedCreatorName, setLoadedCreatorName] = useState<string | null>(
+    null,
+  );
 
   const addOrUpdateActivity = (item: ItineraryItem) => {
     const existingIndex = itinerary.findIndex((i) => i.id === item.id);
@@ -199,10 +215,24 @@ const ItineraryDisplay = ({
     });
   };
 
+  const handleSaveClick = () => {
+    setShowSaveDialog(true);
+  };
+
   const saveItinerary = () => {
+    if (!creatorName.trim()) {
+      toast({
+        title: "Name Required",
+        description: "Please enter your name before saving",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const dataToSave = {
       version: "1.0",
       savedAt: new Date().toISOString(),
+      createdBy: creatorName.trim(),
       tripData: {
         ...tripData,
         startDate: tripData.startDate.toISOString(),
@@ -216,12 +246,17 @@ const ItineraryDisplay = ({
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    const fileName = `itinerary-${tripData.destinations[0].replace(/\s+/g, "-").toLowerCase()}-${format(new Date(), "yyyy-MM-dd")}.json`;
+    const creatorSlug = creatorName.trim().replace(/\s+/g, "-").toLowerCase();
+    const fileName = `itinerary-${tripData.destinations[0].replace(/\s+/g, "-").toLowerCase()}-by-${creatorSlug}-${format(new Date(), "yyyy-MM-dd")}.json`;
     link.download = fileName;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
+
+    setShowSaveDialog(false);
+    setLoadedCreatorName(creatorName.trim());
+    setCreatorName("");
 
     toast({
       title: "Itinerary Saved",
@@ -256,6 +291,11 @@ const ItineraryDisplay = ({
             // Update both trip data and itinerary
             onUpdateTripData(loadedTripData);
             onUpdateItinerary(data.itinerary);
+
+            // Store creator name if available
+            if (data.createdBy) {
+              setLoadedCreatorName(data.createdBy);
+            }
 
             toast({
               title: "Itinerary Loaded",
@@ -418,315 +458,364 @@ const ItineraryDisplay = ({
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={onReset}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Plan New Trip
-          </Button>
-          <ThemeToggle />
-        </div>
-
-        <div className="text-left sm:text-right">
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            {tripData.destinations.join(" → ")} • {tripData.days} days
-          </p>
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            {format(tripData.startDate, "MMM dd")} -{" "}
-            {format(tripData.endDate, "MMM dd, yyyy")}
-          </p>
-        </div>
-      </div>
-
-      <div className="flex flex-col sm:flex-row gap-2">
-        <Button onClick={downloadPDF} className="flex-1 sm:flex-none">
-          <Download className="h-4 w-4 mr-2" />
-          Export as PDF
-        </Button>
-        <Button
-          onClick={saveItinerary}
-          variant="outline"
-          className="flex-1 sm:flex-none"
-        >
-          <Save className="h-4 w-4 mr-2" />
-          Save Project
-        </Button>
-        <Button
-          onClick={loadItinerary}
-          variant="outline"
-          className="flex-1 sm:flex-none"
-        >
-          <Upload className="h-4 w-4 mr-2" />
-          Load Project
-        </Button>
-        <Button
-          variant="destructive"
-          onClick={clearAllActivities}
-          className="flex-1 sm:flex-none"
-          disabled={itinerary.length === 0}
-        >
-          <Trash2 className="h-4 w-4 mr-2" />
-          Clear All
-        </Button>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-2">
-              <DollarSign className="h-5 w-5 text-green-600" />
-              <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Total Cost
-                </p>
-                <p className="text-lg font-semibold">
-                  {tripData.currency} {totalCost}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-2">
-              <DollarSign className="h-5 w-5 text-blue-600" />
-              <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Budget
-                </p>
-                <p className="text-lg font-semibold">
-                  {tripData.currency} {tripData.budget}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-2">
-              <DollarSign
-                className={`h-5 w-5 ${remainingBudget >= 0 ? "text-green-600" : "text-red-600"}`}
+    <>
+      <Dialog open={showSaveDialog} onOpenChange={setShowSaveDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Save Project</DialogTitle>
+            <DialogDescription>
+              Enter your name to save this itinerary project
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="creator-name">Your Name</Label>
+              <Input
+                id="creator-name"
+                placeholder="Enter your name"
+                value={creatorName}
+                onChange={(e) => setCreatorName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    saveItinerary();
+                  }
+                }}
               />
-              <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Remaining
-                </p>
-                <p
-                  className={`text-lg font-semibold ${remainingBudget >= 0 ? "text-green-600" : "text-red-600"}`}
-                >
-                  {tripData.currency} {remainingBudget}
-                </p>
-              </div>
             </div>
-          </CardContent>
-        </Card>
-      </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowSaveDialog(false);
+                setCreatorName("");
+              }}
+            >
+              Cancel
+            </Button>
+            <Button onClick={saveItinerary}>Save Project</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-      <Tabs defaultValue="kanban" className="w-full">
-        <div className="flex items-center justify-between mb-4">
-          <TabsList className="grid w-auto grid-cols-2">
-            <TabsTrigger value="kanban">Kanban Board</TabsTrigger>
-            <TabsTrigger value="table">Table View</TabsTrigger>
-          </TabsList>
-          <Button onClick={addDay} variant="outline" size="sm">
-            <Plus className="h-4 w-4 mr-2" />
-            Add Day
+      <div className="space-y-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={onReset}>
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Plan New Trip
+            </Button>
+            <ThemeToggle />
+          </div>
+
+          <div className="text-left sm:text-right">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              {tripData.destinations.join(" → ")} • {tripData.days} days
+            </p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              {format(tripData.startDate, "MMM dd")} -{" "}
+              {format(tripData.endDate, "MMM dd, yyyy")}
+            </p>
+            {loadedCreatorName && (
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                Created by:{" "}
+                <span className="font-medium uppercase">
+                  {loadedCreatorName}
+                </span>
+              </p>
+            )}
+          </div>
+        </div>
+
+        <div className="flex flex-col sm:flex-row gap-2">
+          <Button onClick={downloadPDF} className="flex-1 sm:flex-none">
+            <Download className="h-4 w-4 mr-2" />
+            Export as PDF
+          </Button>
+          <Button
+            onClick={handleSaveClick}
+            variant="outline"
+            className="flex-1 sm:flex-none"
+          >
+            <Save className="h-4 w-4 mr-2" />
+            Save Project
+          </Button>
+          <Button
+            onClick={loadItinerary}
+            variant="outline"
+            className="flex-1 sm:flex-none"
+          >
+            <Upload className="h-4 w-4 mr-2" />
+            Load Project
+          </Button>
+          <Button
+            variant="destructive"
+            onClick={clearAllActivities}
+            className="flex-1 sm:flex-none"
+            disabled={itinerary.length === 0}
+          >
+            <Trash2 className="h-4 w-4 mr-2" />
+            Clear All
           </Button>
         </div>
 
-        <TabsContent value="kanban" className="space-y-4">
-          <DragDropContext onDragEnd={onDragEnd}>
-            <Droppable
-              droppableId="all-columns"
-              direction="horizontal"
-              type="COLUMN"
-            >
-              {(provided) => (
-                <div
-                  {...provided.droppableProps}
-                  ref={provided.innerRef}
-                  className="flex gap-6 overflow-x-auto pb-4"
-                  style={{ scrollbarWidth: "thin" }}
-                >
-                  {dayColumns.map((column, columnIndex) => (
-                    <Draggable
-                      key={column.day}
-                      draggableId={`day-${column.day}`}
-                      index={columnIndex}
-                    >
-                      {(provided, snapshot) => (
-                        <div
-                          ref={provided.innerRef}
-                          {...provided.draggableProps}
-                          className={`bg-white dark:bg-gray-800 rounded-lg shadow-md border-t-4 border-t-blue-400 bg-blue-50 dark:bg-blue-900/20 min-h-[500px] flex flex-col flex-shrink-0 w-[320px] ${
-                            snapshot.isDragging ? "opacity-75 rotate-2" : ""
-                          }`}
-                        >
-                          <div
-                            {...provided.dragHandleProps}
-                            className="p-4 border-b border-gray-100 dark:border-gray-700 cursor-grab active:cursor-grabbing"
-                          >
-                            <div className="flex items-center justify-between mb-3">
-                              <div className="flex items-center gap-2">
-                                <GripVertical className="h-5 w-5 text-gray-400" />
-                                <h3 className="font-semibold text-gray-800 dark:text-gray-200 text-lg">
-                                  Day {column.day}
-                                </h3>
-                              </div>
-                              <Badge
-                                variant="outline"
-                                className="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
-                              >
-                                {column.items.length}
-                              </Badge>
-                            </div>
-                          </div>
-
-                          <Droppable droppableId={column.day.toString()}>
-                            {(provided, snapshot) => (
-                              <div
-                                ref={provided.innerRef}
-                                {...provided.droppableProps}
-                                className={`flex-1 p-4 space-y-3 transition-colors overflow-y-auto ${
-                                  snapshot.isDraggingOver
-                                    ? "bg-gray-50 dark:bg-gray-700"
-                                    : ""
-                                }`}
-                              >
-                                {column.items.map((item, index) => (
-                                  <ItineraryItemCard
-                                    key={item.id}
-                                    item={item}
-                                    index={index}
-                                    currency={tripData.currency}
-                                    onUpdateItem={addOrUpdateActivity}
-                                    onRemoveItem={removeActivity}
-                                  />
-                                ))}
-                                {provided.placeholder}
-
-                                <AddEditActivityDialog
-                                  day={column.day}
-                                  currency={tripData.currency}
-                                  onSave={addOrUpdateActivity}
-                                />
-                              </div>
-                            )}
-                          </Droppable>
-                        </div>
-                      )}
-                    </Draggable>
-                  ))}
-                  {provided.placeholder}
-                </div>
-              )}
-            </Droppable>
-          </DragDropContext>
-        </TabsContent>
-        <TabsContent value="table" className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card>
-            <CardHeader>
-              <CardTitle>Itinerary Details</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Time</TableHead>
-                      <TableHead>Activity</TableHead>
-                      <TableHead>Location</TableHead>
-                      <TableHead>Cost ({tripData.currency})</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead className="w-[100px]">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {dayColumns.map((dayColumn) => (
-                      <>
-                        <TableRow
-                          key={`day-${dayColumn.day}`}
-                          className="bg-blue-50 dark:bg-blue-900/20 border-b-2 border-blue-200 dark:border-blue-800"
-                        >
-                          <TableCell colSpan={6} className="py-4">
-                            <div className="flex items-center gap-2">
-                              <h3 className="text-lg font-bold text-blue-900 dark:text-blue-100">
-                                Day {dayColumn.day}
-                              </h3>
-                              <Badge
-                                variant="outline"
-                                className="bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-800 dark:text-blue-200"
-                              >
-                                {dayColumn.items.length} activities
-                              </Badge>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-
-                        {dayColumn.items.length === 0 ? (
-                          <TableRow key={`day-${dayColumn.day}-empty`}>
-                            <TableCell
-                              colSpan={6}
-                              className="py-6 text-center text-gray-500 dark:text-gray-400 italic"
-                            >
-                              No activities planned for this day
-                            </TableCell>
-                          </TableRow>
-                        ) : (
-                          dayColumn.items
-                            .sort((a, b) => a.time.localeCompare(b.time))
-                            .map((item, index) => (
-                              <TableRow
-                                key={item.id}
-                                className={`${index === dayColumn.items.length - 1 ? "border-b-4 border-gray-200 dark:border-gray-700" : ""}`}
-                              >
-                                <TableCell className="font-medium">
-                                  {item.time}
-                                </TableCell>
-                                <TableCell>{item.activity}</TableCell>
-                                <TableCell>{item.location}</TableCell>
-                                <TableCell>
-                                  {item.estimatedCost > 0
-                                    ? `${tripData.currency} ${item.estimatedCost}`
-                                    : "Free"}
-                                </TableCell>
-                                <TableCell>
-                                  <Badge
-                                    variant="outline"
-                                    className={getTypeColor(item.type)}
-                                  >
-                                    {getTypeIcon(item.type)}
-                                    <span className="ml-1 capitalize">
-                                      {item.type}
-                                    </span>
-                                  </Badge>
-                                </TableCell>
-                                <TableCell>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => removeActivity(item.id)}
-                                    className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                </TableCell>
-                              </TableRow>
-                            ))
-                        )}
-                      </>
-                    ))}
-                  </TableBody>
-                </Table>
+            <CardContent className="p-4">
+              <div className="flex items-center space-x-2">
+                <DollarSign className="h-5 w-5 text-green-600" />
+                <div>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Total Cost
+                  </p>
+                  <p className="text-lg font-semibold">
+                    {tripData.currency} {totalCost}
+                  </p>
+                </div>
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
-      </Tabs>
-    </div>
+
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center space-x-2">
+                <DollarSign className="h-5 w-5 text-blue-600" />
+                <div>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Budget
+                  </p>
+                  <p className="text-lg font-semibold">
+                    {tripData.currency} {tripData.budget}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center space-x-2">
+                <DollarSign
+                  className={`h-5 w-5 ${remainingBudget >= 0 ? "text-green-600" : "text-red-600"}`}
+                />
+                <div>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Remaining
+                  </p>
+                  <p
+                    className={`text-lg font-semibold ${remainingBudget >= 0 ? "text-green-600" : "text-red-600"}`}
+                  >
+                    {tripData.currency} {remainingBudget}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <Tabs defaultValue="kanban" className="w-full">
+          <div className="flex items-center justify-between mb-4">
+            <TabsList className="grid w-auto grid-cols-2">
+              <TabsTrigger value="kanban">Kanban Board</TabsTrigger>
+              <TabsTrigger value="table">Table View</TabsTrigger>
+            </TabsList>
+            <Button onClick={addDay} variant="outline" size="sm">
+              <Plus className="h-4 w-4 mr-2" />
+              Add Day
+            </Button>
+          </div>
+
+          <TabsContent value="kanban" className="space-y-4">
+            <DragDropContext onDragEnd={onDragEnd}>
+              <Droppable
+                droppableId="all-columns"
+                direction="horizontal"
+                type="COLUMN"
+              >
+                {(provided) => (
+                  <div
+                    {...provided.droppableProps}
+                    ref={provided.innerRef}
+                    className="flex gap-6 overflow-x-auto pb-4"
+                    style={{ scrollbarWidth: "thin" }}
+                  >
+                    {dayColumns.map((column, columnIndex) => (
+                      <Draggable
+                        key={column.day}
+                        draggableId={`day-${column.day}`}
+                        index={columnIndex}
+                      >
+                        {(provided, snapshot) => (
+                          <div
+                            ref={provided.innerRef}
+                            {...provided.draggableProps}
+                            className={`bg-white dark:bg-gray-800 rounded-lg shadow-md border-t-4 border-t-blue-400 bg-blue-50 dark:bg-blue-900/20 min-h-[500px] flex flex-col flex-shrink-0 w-[320px] ${
+                              snapshot.isDragging ? "opacity-75 rotate-2" : ""
+                            }`}
+                          >
+                            <div
+                              {...provided.dragHandleProps}
+                              className="p-4 border-b border-gray-100 dark:border-gray-700 cursor-grab active:cursor-grabbing"
+                            >
+                              <div className="flex items-center justify-between mb-3">
+                                <div className="flex items-center gap-2">
+                                  <GripVertical className="h-5 w-5 text-gray-400" />
+                                  <h3 className="font-semibold text-gray-800 dark:text-gray-200 text-lg">
+                                    Day {column.day}
+                                  </h3>
+                                </div>
+                                <Badge
+                                  variant="outline"
+                                  className="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                                >
+                                  {column.items.length}
+                                </Badge>
+                              </div>
+                            </div>
+
+                            <Droppable droppableId={column.day.toString()}>
+                              {(provided, snapshot) => (
+                                <div
+                                  ref={provided.innerRef}
+                                  {...provided.droppableProps}
+                                  className={`flex-1 p-4 space-y-3 transition-colors overflow-y-auto ${
+                                    snapshot.isDraggingOver
+                                      ? "bg-gray-50 dark:bg-gray-700"
+                                      : ""
+                                  }`}
+                                >
+                                  {column.items.map((item, index) => (
+                                    <ItineraryItemCard
+                                      key={item.id}
+                                      item={item}
+                                      index={index}
+                                      currency={tripData.currency}
+                                      onUpdateItem={addOrUpdateActivity}
+                                      onRemoveItem={removeActivity}
+                                    />
+                                  ))}
+                                  {provided.placeholder}
+
+                                  <AddEditActivityDialog
+                                    day={column.day}
+                                    currency={tripData.currency}
+                                    onSave={addOrUpdateActivity}
+                                  />
+                                </div>
+                              )}
+                            </Droppable>
+                          </div>
+                        )}
+                      </Draggable>
+                    ))}
+                    {provided.placeholder}
+                  </div>
+                )}
+              </Droppable>
+            </DragDropContext>
+          </TabsContent>
+          <TabsContent value="table" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Itinerary Details</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Time</TableHead>
+                        <TableHead>Activity</TableHead>
+                        <TableHead>Location</TableHead>
+                        <TableHead>Cost ({tripData.currency})</TableHead>
+                        <TableHead>Type</TableHead>
+                        <TableHead className="w-[100px]">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {dayColumns.map((dayColumn) => (
+                        <>
+                          <TableRow
+                            key={`day-${dayColumn.day}`}
+                            className="bg-blue-50 dark:bg-blue-900/20 border-b-2 border-blue-200 dark:border-blue-800"
+                          >
+                            <TableCell colSpan={6} className="py-4">
+                              <div className="flex items-center gap-2">
+                                <h3 className="text-lg font-bold text-blue-900 dark:text-blue-100">
+                                  Day {dayColumn.day}
+                                </h3>
+                                <Badge
+                                  variant="outline"
+                                  className="bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-800 dark:text-blue-200"
+                                >
+                                  {dayColumn.items.length} activities
+                                </Badge>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+
+                          {dayColumn.items.length === 0 ? (
+                            <TableRow key={`day-${dayColumn.day}-empty`}>
+                              <TableCell
+                                colSpan={6}
+                                className="py-6 text-center text-gray-500 dark:text-gray-400 italic"
+                              >
+                                No activities planned for this day
+                              </TableCell>
+                            </TableRow>
+                          ) : (
+                            dayColumn.items
+                              .sort((a, b) => a.time.localeCompare(b.time))
+                              .map((item, index) => (
+                                <TableRow
+                                  key={item.id}
+                                  className={`${index === dayColumn.items.length - 1 ? "border-b-4 border-gray-200 dark:border-gray-700" : ""}`}
+                                >
+                                  <TableCell className="font-medium">
+                                    {item.time}
+                                  </TableCell>
+                                  <TableCell>{item.activity}</TableCell>
+                                  <TableCell>{item.location}</TableCell>
+                                  <TableCell>
+                                    {item.estimatedCost > 0
+                                      ? `${tripData.currency} ${item.estimatedCost}`
+                                      : "Free"}
+                                  </TableCell>
+                                  <TableCell>
+                                    <Badge
+                                      variant="outline"
+                                      className={getTypeColor(item.type)}
+                                    >
+                                      {getTypeIcon(item.type)}
+                                      <span className="ml-1 capitalize">
+                                        {item.type}
+                                      </span>
+                                    </Badge>
+                                  </TableCell>
+                                  <TableCell>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => removeActivity(item.id)}
+                                      className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </TableCell>
+                                </TableRow>
+                              ))
+                          )}
+                        </>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
+    </>
   );
 };
 
