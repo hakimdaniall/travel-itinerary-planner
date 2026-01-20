@@ -123,7 +123,10 @@ const ItineraryDisplay = ({
 
     // Add trip details
     doc.setFontSize(11);
-    doc.text(`Destinations: ${tripData.destinations.join(" → ")}`, 14, 30);
+    const destinationText = tripData.fromDestination
+      ? `Route: ${tripData.fromDestination} > ${tripData.destinations.join(" > ")}`
+      : `Destinations: ${tripData.destinations.join(", ")}`;
+    doc.text(destinationText, 14, 30);
     doc.text(
       `Duration: ${tripData.days} days (${format(tripData.startDate, "MMM dd")} - ${format(tripData.endDate, "MMM dd, yyyy")})`,
       14,
@@ -179,10 +182,10 @@ const ItineraryDisplay = ({
       headStyles: { fillColor: [31, 41, 55] },
       columnStyles: {
         0: { cellWidth: 20 },
-        1: { cellWidth: 50 },
-        2: { cellWidth: 40 },
+        1: { cellWidth: 60 },
+        2: { cellWidth: 45 },
         3: { cellWidth: 25 },
-        4: { cellWidth: 25 },
+        4: { cellWidth: 30 },
       },
     });
 
