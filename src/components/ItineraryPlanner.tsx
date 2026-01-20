@@ -125,7 +125,7 @@ const ItineraryPlanner = () => {
       {!tripData ? (
         <Card>
           <CardHeader>
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between flex-wrap gap-4">
               <CardTitle>Plan Your Trip</CardTitle>
               <Button onClick={loadItinerary} variant="outline" size="sm">
                 <Upload className="h-4 w-4 mr-2" />
