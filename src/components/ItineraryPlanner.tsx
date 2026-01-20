@@ -32,6 +32,9 @@ const ItineraryPlanner = () => {
   const [tripData, setTripData] = useState<TripData | null>(null);
   const [itinerary, setItinerary] = useState<ItineraryItem[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [loadedCreatorName, setLoadedCreatorName] = useState<string | null>(
+    null,
+  );
   const { toast } = useToast();
 
   const generateItinerary = async (data: TripData) => {
@@ -71,6 +74,7 @@ const ItineraryPlanner = () => {
   const resetPlanner = () => {
     setTripData(null);
     setItinerary([]);
+    setLoadedCreatorName(null);
   };
 
   const loadItinerary = () => {
@@ -100,6 +104,11 @@ const ItineraryPlanner = () => {
             // Update the state
             setTripData(loadedTripData);
             setItinerary(data.itinerary);
+
+            // Store creator name if available
+            if (data.createdBy) {
+              setLoadedCreatorName(data.createdBy);
+            }
 
             toast({
               title: "Itinerary Loaded",
@@ -148,6 +157,7 @@ const ItineraryPlanner = () => {
           onReset={resetPlanner}
           onUpdateItinerary={updateItinerary}
           onUpdateTripData={updateTripData}
+          initialCreatorName={loadedCreatorName}
         />
       )}
     </div>

@@ -58,6 +58,7 @@ interface ItineraryDisplayProps {
   onReset: () => void;
   onUpdateItinerary: (newItinerary: ItineraryItem[]) => void;
   onUpdateTripData: (newTripData: TripData) => void;
+  initialCreatorName?: string | null;
 }
 
 const ItineraryDisplay = ({
@@ -67,12 +68,13 @@ const ItineraryDisplay = ({
   onReset,
   onUpdateItinerary,
   onUpdateTripData,
+  initialCreatorName,
 }: ItineraryDisplayProps) => {
   const { toast } = useToast();
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [creatorName, setCreatorName] = useState("");
   const [loadedCreatorName, setLoadedCreatorName] = useState<string | null>(
-    null,
+    initialCreatorName || null,
   );
 
   const addOrUpdateActivity = (item: ItineraryItem) => {
