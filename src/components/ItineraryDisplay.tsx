@@ -253,7 +253,8 @@ const ItineraryDisplay = ({
               endDate: new Date(data.tripData.endDate),
             };
 
-            // Update the itinerary
+            // Update both trip data and itinerary
+            onUpdateTripData(loadedTripData);
             onUpdateItinerary(data.itinerary);
 
             toast({
