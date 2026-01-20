@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -10,14 +9,26 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { TripData } from "./ItineraryPlanner";
 
 const tripSchema = z.object({
   fromDestination: z.string().min(1, "From destination is required"),
-  destinations: z.array(z.string()).min(1, "At least one destination is required"),
+  destinations: z
+    .array(z.string())
+    .min(1, "At least one destination is required"),
   startDate: z.date({
     required_error: "Start date is required",
   }),
@@ -31,12 +42,20 @@ const tripSchema = z.object({
 
 interface TripFormProps {
   onSubmit: (data: TripData) => void;
+  onCustomCreate: (data: TripData) => void;
 }
 
-const TripForm = ({ onSubmit }: TripFormProps) => {
+const TripForm = ({ onSubmit, onCustomCreate }: TripFormProps) => {
   const [destinations, setDestinations] = useState<string[]>([""]);
   const [startDate, setStartDate] = useState<Date>();
   const [endDate, setEndDate] = useState<Date>();
+  const [errors, setErrors] = useState<{
+    fromDestination?: string;
+    destinations?: string;
+    startDate?: string;
+    endDate?: string;
+    budget?: string;
+  }>({});
 
   const form = useForm<z.infer<typeof tripSchema>>({
     resolver: zodResolver(tripSchema),
@@ -68,29 +87,57 @@ const TripForm = ({ onSubmit }: TripFormProps) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!startDate || !endDate) {
-      return;
-    }
 
-    const filteredDestinations = destinations.filter(dest => dest.trim() !== "");
-    if (filteredDestinations.length === 0) {
-      return;
-    }
-
-    const days = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-    
+    const newErrors: typeof errors = {};
     const formData = new FormData(e.target as HTMLFormElement);
+    const fromDestination = (formData.get("fromDestination") as string)?.trim();
     const budget = Number(formData.get("budget"));
-    const fromDestination = formData.get("fromDestination") as string;
+
+    // Validate from destination
+    if (!fromDestination) {
+      newErrors.fromDestination = "From destination is required";
+    }
+
+    // Validate destinations
+    const filteredDestinations = destinations.filter(
+      (dest) => dest.trim() !== "",
+    );
+    if (filteredDestinations.length === 0) {
+      newErrors.destinations = "At least one destination is required";
+    }
+
+    // Validate dates
+    if (!startDate) {
+      newErrors.startDate = "Start date is required";
+    }
+    if (!endDate) {
+      newErrors.endDate = "End date is required";
+    }
+
+    // Validate budget
+    if (!budget || budget <= 0) {
+      newErrors.budget = "Budget must be greater than 0";
+    }
+
+    setErrors(newErrors);
+
+    if (Object.keys(newErrors).length > 0) {
+      return;
+    }
+
+    const days =
+      Math.ceil(
+        (endDate!.getTime() - startDate!.getTime()) / (1000 * 60 * 60 * 24),
+      ) + 1;
+
     const currency = formData.get("currency") as string;
     const includeFlights = formData.get("includeFlights") === "on";
 
     const tripData: TripData = {
       fromDestination,
       destinations: filteredDestinations,
-      startDate,
-      endDate,
+      startDate: startDate!,
+      endDate: endDate!,
       days,
       includeFlights,
       budget,
@@ -100,16 +147,82 @@ const TripForm = ({ onSubmit }: TripFormProps) => {
     onSubmit(tripData);
   };
 
+  const handleCustomCreate = (e: React.MouseEvent) => {
+    e.preventDefault();
+
+    const newErrors: typeof errors = {};
+    const form = document.querySelector("form") as HTMLFormElement;
+    const formData = new FormData(form);
+    const fromDestination = (formData.get("fromDestination") as string)?.trim();
+    const budget = Number(formData.get("budget"));
+
+    // Validate from destination
+    if (!fromDestination) {
+      newErrors.fromDestination = "From destination is required";
+    }
+
+    // Validate destinations
+    const filteredDestinations = destinations.filter(
+      (dest) => dest.trim() !== "",
+    );
+    if (filteredDestinations.length === 0) {
+      newErrors.destinations = "At least one destination is required";
+    }
+
+    // Validate dates
+    if (!startDate) {
+      newErrors.startDate = "Start date is required";
+    }
+    if (!endDate) {
+      newErrors.endDate = "End date is required";
+    }
+
+    // Validate budget
+    if (!budget || budget <= 0) {
+      newErrors.budget = "Budget must be greater than 0";
+    }
+
+    setErrors(newErrors);
+
+    if (Object.keys(newErrors).length > 0) {
+      return;
+    }
+
+    const days =
+      Math.ceil(
+        (endDate!.getTime() - startDate!.getTime()) / (1000 * 60 * 60 * 24),
+      ) + 1;
+
+    const currency = formData.get("currency") as string;
+    const includeFlights = formData.get("includeFlights") === "on";
+
+    const tripData: TripData = {
+      fromDestination,
+      destinations: filteredDestinations,
+      startDate: startDate!,
+      endDate: endDate!,
+      days,
+      includeFlights,
+      budget,
+      currency,
+    };
+    onCustomCreate(tripData);
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <Label className="text-base font-semibold">From</Label>
-      <Input
-        id="fromDestination"
-        name="fromDestination"
-        className="!mt-4 capitalize"
-        placeholder="Enter destination"
-        required
-      />
+      <div>
+        <Label className="text-base font-semibold">From</Label>
+        <Input
+          id="fromDestination"
+          name="fromDestination"
+          className="!mt-4 capitalize"
+          placeholder="Enter destination"
+        />
+        {errors.fromDestination && (
+          <p className="text-sm text-red-500 mt-1">{errors.fromDestination}</p>
+        )}
+      </div>
       <div className="space-y-4">
         <Label className="text-base font-semibold">Destinations</Label>
         {destinations.map((destination, index) => (
@@ -133,6 +246,9 @@ const TripForm = ({ onSubmit }: TripFormProps) => {
             )}
           </div>
         ))}
+        {errors.destinations && (
+          <p className="text-sm text-red-500 mt-1">{errors.destinations}</p>
+        )}
         <Button
           type="button"
           variant="outline"
@@ -153,7 +269,7 @@ const TripForm = ({ onSubmit }: TripFormProps) => {
                 variant="outline"
                 className={cn(
                   "w-full justify-start text-left font-normal",
-                  !startDate && "text-muted-foreground"
+                  !startDate && "text-muted-foreground",
                 )}
               >
                 <CalendarIcon className="mr-2 h-4 w-4" />
@@ -171,6 +287,9 @@ const TripForm = ({ onSubmit }: TripFormProps) => {
               />
             </PopoverContent>
           </Popover>
+          {errors.startDate && (
+            <p className="text-sm text-red-500">{errors.startDate}</p>
+          )}
         </div>
 
         <div className="space-y-2">
@@ -181,7 +300,7 @@ const TripForm = ({ onSubmit }: TripFormProps) => {
                 variant="outline"
                 className={cn(
                   "w-full justify-start text-left font-normal",
-                  !endDate && "text-muted-foreground"
+                  !endDate && "text-muted-foreground",
                 )}
               >
                 <CalendarIcon className="mr-2 h-4 w-4" />
@@ -193,12 +312,17 @@ const TripForm = ({ onSubmit }: TripFormProps) => {
                 mode="single"
                 selected={endDate}
                 onSelect={setEndDate}
-                disabled={(date) => date < new Date() || (startDate && date < startDate)}
+                disabled={(date) =>
+                  date < new Date() || (startDate && date < startDate)
+                }
                 initialFocus
                 className="pointer-events-auto"
               />
             </PopoverContent>
           </Popover>
+          {errors.endDate && (
+            <p className="text-sm text-red-500">{errors.endDate}</p>
+          )}
         </div>
       </div>
 
@@ -211,8 +335,11 @@ const TripForm = ({ onSubmit }: TripFormProps) => {
             type="number"
             placeholder="1000"
             min="1"
-            required
+            defaultValue="1000"
           />
+          {errors.budget && (
+            <p className="text-sm text-red-500">{errors.budget}</p>
+          )}
         </div>
 
         <div className="space-y-2">
@@ -234,12 +361,25 @@ const TripForm = ({ onSubmit }: TripFormProps) => {
 
       <div className="flex items-center space-x-2">
         <Checkbox id="includeFlights" name="includeFlights" defaultChecked />
-        <Label htmlFor="includeFlights">Include flight tickets in itinerary</Label>
+        <Label htmlFor="includeFlights">
+          Include flight tickets in itinerary
+        </Label>
       </div>
 
-      <Button type="submit" className="w-full" size="lg">
-        Generate Itinerary
-      </Button>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Button type="submit" className="w-full" size="lg">
+          Generate with AI
+        </Button>
+        <Button
+          type="button"
+          onClick={handleCustomCreate}
+          variant="outline"
+          className="w-full"
+          size="lg"
+        >
+          Build Custom Itinerary
+        </Button>
+      </div>
     </form>
   );
 };

@@ -6,6 +6,7 @@ import ItineraryDisplay from "./ItineraryDisplay";
 import { fetchItineraryFromGroq } from "./../api/groqApi";
 import { Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+
 export interface TripData {
   fromDestination: string;
   destinations: string[];
@@ -48,6 +49,15 @@ const ItineraryPlanner = () => {
     } finally {
       setIsGenerating(false);
     }
+  };
+
+  const createCustomItinerary = (data: TripData) => {
+    setTripData(data);
+    setItinerary([]);
+    toast({
+      title: "Custom Itinerary Created",
+      description: "Start building your trip by adding activities to each day",
+    });
   };
 
   const updateItinerary = (newItinerary: ItineraryItem[]) => {
@@ -124,7 +134,10 @@ const ItineraryPlanner = () => {
             </div>
           </CardHeader>
           <CardContent>
-            <TripForm onSubmit={generateItinerary} />
+            <TripForm
+              onSubmit={generateItinerary}
+              onCustomCreate={createCustomItinerary}
+            />
           </CardContent>
         </Card>
       ) : (
