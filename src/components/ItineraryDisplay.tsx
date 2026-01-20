@@ -208,7 +208,7 @@ const ItineraryDisplay = ({
     });
 
     // Save the PDF
-    const fileName = `itinerary-${tripData.destinations[0].replace(/\s+/g, "-").toLowerCase()}-${format(new Date(), "yyyy-MM-dd")}.pdf`;
+    const fileName = `${format(new Date(), "yyyyMMdd")}-itinerary-${tripData.destinations[0].replace(/\s+/g, "-").toLowerCase()}.pdf`;
     doc.save(fileName);
 
     toast({
@@ -249,7 +249,7 @@ const ItineraryDisplay = ({
     const link = document.createElement("a");
     link.href = url;
     const creatorSlug = creatorName.trim().replace(/\s+/g, "-").toLowerCase();
-    const fileName = `itinerary-${tripData.destinations[0].replace(/\s+/g, "-").toLowerCase()}-by-${creatorSlug}-${format(new Date(), "yyyy-MM-dd")}.json`;
+    const fileName = `${format(new Date(), "yyyyMMdd")}-itinerary-${tripData.destinations[0].replace(/\s+/g, "-").toLowerCase()}-by-${creatorSlug}.json`;
     link.download = fileName;
     document.body.appendChild(link);
     link.click();
