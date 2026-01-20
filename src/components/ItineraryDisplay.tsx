@@ -441,7 +441,7 @@ const ItineraryDisplay = ({
       <div className="flex flex-col sm:flex-row gap-2">
         <Button onClick={downloadPDF} className="flex-1 sm:flex-none">
           <Download className="h-4 w-4 mr-2" />
-          Download PDF
+          Export as PDF
         </Button>
         <Button
           onClick={saveItinerary}
@@ -449,7 +449,7 @@ const ItineraryDisplay = ({
           className="flex-1 sm:flex-none"
         >
           <Save className="h-4 w-4 mr-2" />
-          Save Itinerary
+          Save Project
         </Button>
         <Button
           onClick={loadItinerary}
@@ -457,7 +457,7 @@ const ItineraryDisplay = ({
           className="flex-1 sm:flex-none"
         >
           <Upload className="h-4 w-4 mr-2" />
-          Load Itinerary
+          Load Project
         </Button>
         <Button
           variant="destructive"
@@ -466,7 +466,7 @@ const ItineraryDisplay = ({
           disabled={itinerary.length === 0}
         >
           <Trash2 className="h-4 w-4 mr-2" />
-          Clear All Activities
+          Clear All
         </Button>
       </div>
 
