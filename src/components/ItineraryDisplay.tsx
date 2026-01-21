@@ -719,36 +719,34 @@ const ItineraryDisplay = ({
               <DrawerTitle>Edit Budget</DrawerTitle>
               <DrawerDescription>Update your trip budget</DrawerDescription>
             </DrawerHeader>
-            <div className="px-4 pb-4">
-              <div className="grid gap-4 py-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="budget-amount">Budget Amount</Label>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-muted-foreground">
-                      {tripData.currency}
-                    </span>
-                    <Input
-                      id="budget-amount"
-                      type="number"
-                      min="1"
-                      value={budgetValue}
-                      onChange={(e) => setBudgetValue(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") handleBudgetSave();
-                        if (e.key === "Escape") handleBudgetCancel();
-                      }}
-                      placeholder="Enter budget amount"
-                    />
-                  </div>
+            <div className="px-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="budget-amount">Budget Amount</Label>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">
+                    {tripData.currency}
+                  </span>
+                  <Input
+                    id="budget-amount"
+                    type="number"
+                    min="1"
+                    value={budgetValue}
+                    onChange={(e) => setBudgetValue(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") handleBudgetSave();
+                      if (e.key === "Escape") handleBudgetCancel();
+                    }}
+                    placeholder="Enter budget amount"
+                  />
                 </div>
               </div>
-              <DrawerFooter>
-                <Button onClick={handleBudgetSave}>Save Budget</Button>
-                <Button variant="outline" onClick={handleBudgetCancel}>
-                  Cancel
-                </Button>
-              </DrawerFooter>
             </div>
+            <DrawerFooter>
+              <Button onClick={handleBudgetSave}>Save Budget</Button>
+              <Button variant="outline" onClick={handleBudgetCancel}>
+                Cancel
+              </Button>
+            </DrawerFooter>
           </DrawerContent>
         </Drawer>
       ) : (
