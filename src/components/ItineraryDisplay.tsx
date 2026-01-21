@@ -652,19 +652,19 @@ const ItineraryDisplay = ({
                   }}
                 />
               </div>
+              <div className="flex justify-end gap-2 mt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowSaveDialog(false);
+                    setCreatorName("");
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button onClick={saveItinerary}>Save Project</Button>
+              </div>
             </div>
-            <DrawerFooter>
-              <Button onClick={saveItinerary}>Save Project</Button>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setShowSaveDialog(false);
-                  setCreatorName("");
-                }}
-              >
-                Cancel
-              </Button>
-            </DrawerFooter>
           </DrawerContent>
         </Drawer>
       ) : (
@@ -740,13 +740,13 @@ const ItineraryDisplay = ({
                   />
                 </div>
               </div>
+              <div className="flex justify-end gap-2 mt-4">
+                <Button variant="outline" onClick={handleBudgetCancel}>
+                  Cancel
+                </Button>
+                <Button onClick={handleBudgetSave}>Save Budget</Button>
+              </div>
             </div>
-            <DrawerFooter>
-              <Button onClick={handleBudgetSave}>Save Budget</Button>
-              <Button variant="outline" onClick={handleBudgetCancel}>
-                Cancel
-              </Button>
-            </DrawerFooter>
           </DrawerContent>
         </Drawer>
       ) : (
@@ -868,13 +868,16 @@ const ItineraryDisplay = ({
                   <span className="text-sm text-muted-foreground">.pdf</span>
                 </div>
               </div>
+              <div className="flex justify-end gap-2 mt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowPdfDialog(false)}
+                >
+                  Cancel
+                </Button>
+                <Button onClick={confirmDownloadPDF}>Download</Button>
+              </div>
             </div>
-            <DrawerFooter>
-              <Button onClick={confirmDownloadPDF}>Download</Button>
-              <Button variant="outline" onClick={() => setShowPdfDialog(false)}>
-                Cancel
-              </Button>
-            </DrawerFooter>
           </DrawerContent>
         </Drawer>
       ) : (
