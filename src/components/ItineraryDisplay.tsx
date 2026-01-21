@@ -364,6 +364,10 @@ const ItineraryDisplay = ({
   };
 
   const handleSaveClick = () => {
+    // Pre-fill creator name if project was loaded
+    if (loadedCreatorName && !creatorName) {
+      setCreatorName(loadedCreatorName);
+    }
     setShowSaveDialog(true);
   };
 
