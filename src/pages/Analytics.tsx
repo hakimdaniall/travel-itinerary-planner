@@ -44,6 +44,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Progress } from "@/components/ui/progress";
 
 interface AnalyticsStats {
   generated: number;
@@ -380,19 +381,14 @@ const Analytics = () => {
                           %
                         </span>
                       </div>
-                      <div className="w-full bg-slate-200 dark:bg-slate-800 rounded-full h-2">
-                        <div
-                          className="bg-green-500 h-2 rounded-full transition-all"
-                          style={{
-                            width: `${
-                              data.stats.generated > 0
-                                ? (data.stats.saved / data.stats.generated) *
-                                  100
-                                : 0
-                            }%`,
-                          }}
-                        />
-                      </div>
+                      <Progress
+                        value={
+                          data.stats.generated > 0
+                            ? (data.stats.saved / data.stats.generated) * 100
+                            : 0
+                        }
+                        className="h-2 [&>div]:bg-green-500"
+                      />
                     </div>
                     <div>
                       <div className="flex justify-between mb-2">
@@ -409,18 +405,14 @@ const Analytics = () => {
                           %
                         </span>
                       </div>
-                      <div className="w-full bg-slate-200 dark:bg-slate-800 rounded-full h-2">
-                        <div
-                          className="bg-orange-500 h-2 rounded-full transition-all"
-                          style={{
-                            width: `${
-                              data.stats.saved > 0
-                                ? (data.stats.exported / data.stats.saved) * 100
-                                : 0
-                            }%`,
-                          }}
-                        />
-                      </div>
+                      <Progress
+                        value={
+                          data.stats.saved > 0
+                            ? (data.stats.exported / data.stats.saved) * 100
+                            : 0
+                        }
+                        className="h-2 [&>div]:bg-orange-500"
+                      />
                     </div>
                   </CardContent>
                 </Card>

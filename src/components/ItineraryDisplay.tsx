@@ -113,6 +113,8 @@ const ItineraryDisplay = ({
   const [showClearAllDialog, setShowClearAllDialog] = useState(false);
   const [showPdfDialog, setShowPdfDialog] = useState(false);
   const [pdfFileName, setPdfFileName] = useState("");
+  const [isExporting, setIsExporting] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const handleBudgetEdit = useCallback(() => {
     setShowBudgetDialog(true);
@@ -266,11 +268,13 @@ const ItineraryDisplay = ({
     setShowPdfDialog(true);
   };
 
-  const confirmDownloadPDF = () => {
+  const confirmDownloadPDF = async () => {
     if (!pdfFileName.trim()) {
       toast.error("Please enter a filename for your PDF");
       return;
     }
+
+    setIsExporting(true);
 
     const doc = new jsPDF();
 
@@ -350,13 +354,19 @@ const ItineraryDisplay = ({
     const fileName = `${pdfFileName.trim()}.pdf`;
     doc.save(fileName);
 
-    // Track export event
-    analyticsService.trackExported(
-      tripData.destinations[0] || "Unknown",
-      tripData.days,
-      tripData.budget,
-    );
+    // Track export event with creator name
+    try {
+      await analyticsService.trackExported(
+        tripData.destinations[0] || "Unknown",
+        tripData.days,
+        tripData.budget,
+        loadedCreatorName || undefined,
+      );
+    } catch (error) {
+      console.error("Failed to track export event:", error);
+    }
 
+    setIsExporting(false);
     toast.success(`Your itinerary has been saved as ${fileName}`);
 
     setShowPdfDialog(false);
@@ -371,11 +381,13 @@ const ItineraryDisplay = ({
     setShowSaveDialog(true);
   };
 
-  const saveItinerary = () => {
+  const saveItinerary = async () => {
     if (!creatorName.trim()) {
       toast.error("Please enter your name before saving");
       return;
     }
+
+    setIsSaving(true);
 
     const dataToSave = {
       version: "1.0",
@@ -408,13 +420,18 @@ const ItineraryDisplay = ({
     setCreatorName("");
 
     // Track save event with creator name
-    analyticsService.trackSaved(
-      tripData.destinations[0] || "Unknown",
-      tripData.days,
-      tripData.budget,
-      savedCreatorName,
-    );
+    try {
+      await analyticsService.trackSaved(
+        tripData.destinations[0] || "Unknown",
+        tripData.days,
+        tripData.budget,
+        savedCreatorName,
+      );
+    } catch (error) {
+      console.error("Failed to track save event:", error);
+    }
 
+    setIsSaving(false);
     toast.success(`Your itinerary has been saved as ${fileName}`);
   };
 
@@ -649,10 +666,13 @@ const ItineraryDisplay = ({
                     setShowSaveDialog(false);
                     setCreatorName("");
                   }}
+                  disabled={isSaving}
                 >
                   Cancel
                 </Button>
-                <Button onClick={saveItinerary}>Save Project</Button>
+                <Button onClick={saveItinerary} disabled={isSaving}>
+                  {isSaving ? "Saving..." : "Save Project"}
+                </Button>
               </div>
             </div>
           </DrawerContent>
@@ -689,10 +709,13 @@ const ItineraryDisplay = ({
                   setShowSaveDialog(false);
                   setCreatorName("");
                 }}
+                disabled={isSaving}
               >
                 Cancel
               </Button>
-              <Button onClick={saveItinerary}>Save Project</Button>
+              <Button onClick={saveItinerary} disabled={isSaving}>
+                {isSaving ? "Saving..." : "Save Project"}
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -864,10 +887,13 @@ const ItineraryDisplay = ({
                 <Button
                   variant="outline"
                   onClick={() => setShowPdfDialog(false)}
+                  disabled={isExporting}
                 >
                   Cancel
                 </Button>
-                <Button onClick={confirmDownloadPDF}>Download</Button>
+                <Button onClick={confirmDownloadPDF} disabled={isExporting}>
+                  {isExporting ? "Exporting..." : "Download"}
+                </Button>
               </div>
             </div>
           </DrawerContent>
@@ -901,10 +927,16 @@ const ItineraryDisplay = ({
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setShowPdfDialog(false)}>
+              <Button
+                variant="outline"
+                onClick={() => setShowPdfDialog(false)}
+                disabled={isExporting}
+              >
                 Cancel
               </Button>
-              <Button onClick={confirmDownloadPDF}>Download</Button>
+              <Button onClick={confirmDownloadPDF} disabled={isExporting}>
+                {isExporting ? "Exporting..." : "Download"}
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

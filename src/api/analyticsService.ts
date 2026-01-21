@@ -114,12 +114,14 @@ class AnalyticsService {
     tripDestination: string,
     tripDays: number,
     tripBudget: number,
+    creatorName?: string,
   ): Promise<void> {
     return this.trackEvent({
       eventType: "exported",
       tripDestination,
       tripDays,
       tripBudget,
+      creatorName,
     });
   }
 
