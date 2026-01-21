@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import TripForm from "./TripForm";
 import ItineraryDisplay from "./ItineraryDisplay";
 import { fetchItineraryFromGroq } from "./../api/groqApi";
+import { analyticsService } from "./../api/analyticsService";
 import { Upload } from "lucide-react";
 import { toast } from "sonner";
 
@@ -43,6 +44,13 @@ const ItineraryPlanner = () => {
     try {
       const result = await fetchItineraryFromGroq(data);
       setItinerary(result);
+
+      // Track successful generation
+      analyticsService.trackGenerated(
+        data.destinations[0] || "Unknown",
+        data.days,
+        data.budget,
+      );
     } catch (err) {
       console.error("Error generating itinerary:", err);
       alert("Failed to generate itinerary. Please try again.");
