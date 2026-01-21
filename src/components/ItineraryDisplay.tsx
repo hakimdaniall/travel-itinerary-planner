@@ -873,10 +873,7 @@ const ItineraryDisplay = ({
             </div>
             <DrawerFooter>
               <Button onClick={confirmDownloadPDF}>Download</Button>
-              <Button
-                variant="outline"
-                onClick={() => setShowPdfDialog(false)}
-              >
+              <Button variant="outline" onClick={() => setShowPdfDialog(false)}>
                 Cancel
               </Button>
             </DrawerFooter>
