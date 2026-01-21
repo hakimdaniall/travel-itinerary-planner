@@ -625,7 +625,7 @@ const ItineraryDisplay = ({
   return (
     <>
       {isMobile ? (
-        <Drawer open={showSaveDialog} onOpenChange={setShowSaveDialog}>
+        <Drawer open={showSaveDialog} onOpenChange={setShowSaveDialog} shouldScaleBackground={false}>
           <DrawerContent>
             <DrawerHeader>
               <DrawerTitle>Save Project</DrawerTitle>
@@ -707,7 +707,7 @@ const ItineraryDisplay = ({
       )}
 
       {isMobile ? (
-        <Drawer open={showBudgetDialog} onOpenChange={setShowBudgetDialog}>
+        <Drawer open={showBudgetDialog} onOpenChange={setShowBudgetDialog} shouldScaleBackground={false}>
           <DrawerContent>
             <DrawerHeader>
               <DrawerTitle>Edit Budget</DrawerTitle>
@@ -835,7 +835,7 @@ const ItineraryDisplay = ({
       </AlertDialog>
 
       {isMobile ? (
-        <Drawer open={showPdfDialog} onOpenChange={setShowPdfDialog}>
+        <Drawer open={showPdfDialog} onOpenChange={setShowPdfDialog} shouldScaleBackground={false}>
           <DrawerContent>
             <DrawerHeader>
               <DrawerTitle>Download PDF</DrawerTitle>

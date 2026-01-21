@@ -138,7 +138,7 @@ const AddTaskDialog = ({
 
   if (isMobile) {
     return (
-      <Drawer open={isOpen} onOpenChange={handleClose}>
+      <Drawer open={isOpen} onOpenChange={handleClose} shouldScaleBackground={false}>
         <DrawerContent>
           <DrawerHeader>
             <DrawerTitle>Add Task to {columnTitle}</DrawerTitle>
