@@ -79,6 +79,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "sonner";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { analyticsService } from "./../api/analyticsService";
 
 interface ItineraryDisplayProps {
   tripData: TripData;
@@ -349,6 +350,13 @@ const ItineraryDisplay = ({
     const fileName = `${pdfFileName.trim()}.pdf`;
     doc.save(fileName);
 
+    // Track export event
+    analyticsService.trackExported(
+      tripData.destinations[0] || "Unknown",
+      tripData.days,
+      tripData.budget,
+    );
+
     toast.success(`Your itinerary has been saved as ${fileName}`);
 
     setShowPdfDialog(false);
@@ -393,6 +401,13 @@ const ItineraryDisplay = ({
     setShowSaveDialog(false);
     setLoadedCreatorName(creatorName.trim());
     setCreatorName("");
+
+    // Track save event
+    analyticsService.trackSaved(
+      tripData.destinations[0] || "Unknown",
+      tripData.days,
+      tripData.budget,
+    );
 
     toast.success(`Your itinerary has been saved as ${fileName}`);
   };
