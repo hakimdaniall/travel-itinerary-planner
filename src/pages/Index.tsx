@@ -1,11 +1,21 @@
 import ItineraryPlanner from "@/components/ItineraryPlanner";
-import { Sparkles, ExternalLink } from "lucide-react";
+import { Sparkles, ExternalLink, BarChart3 } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 
 const Index = () => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-slate-950 transition-colors duration-200 flex flex-col">
       <div className="container mx-auto px-4 py-8 flex-1">
         <header className="mb-8 text-center">
+          {/* <div className="flex justify-end mb-4">
+            <Link to="/analytics">
+              <Button variant="outline" size="sm" className="gap-2">
+                <BarChart3 className="h-4 w-4" />
+                View Analytics
+              </Button>
+            </Link>
+          </div> */}
           <h1 className="text-5xl font-light tracking-tight text-slate-900 dark:text-slate-50 mb-3">
             Travel Itinerary Planner
           </h1>
