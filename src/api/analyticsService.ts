@@ -14,6 +14,15 @@ interface AnalyticsStats {
   exported: number;
 }
 
+interface TripData {
+  event_type: "generated" | "saved" | "exported";
+  trip_destination: string;
+  trip_days: number;
+  trip_budget: number;
+  creator_name: string;
+  created_at: string;
+}
+
 interface AnalyticsResponse {
   success: boolean;
   period: string;
@@ -24,6 +33,7 @@ interface AnalyticsResponse {
     event_type: string;
     count: string;
   }>;
+  trips: TripData[];
 }
 
 class AnalyticsService {

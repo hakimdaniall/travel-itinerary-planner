@@ -18,9 +18,32 @@ import {
   Sparkles,
   ExternalLink,
   ArrowLeft,
+  Table as TableIcon,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  ChartConfig,
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  ResponsiveContainer,
+} from "recharts";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 interface AnalyticsStats {
   generated: number;
@@ -34,12 +57,22 @@ interface DailyData {
   count: string;
 }
 
+interface TripData {
+  event_type: "generated" | "saved" | "exported";
+  trip_destination: string;
+  trip_days: number;
+  trip_budget: number;
+  creator_name: string;
+  created_at: string;
+}
+
 interface AnalyticsData {
   success: boolean;
   period: string;
   stats: AnalyticsStats;
   total: number;
   daily: DailyData[];
+  trips: TripData[];
 }
 
 const Analytics = () => {
@@ -114,10 +147,21 @@ const Analytics = () => {
   };
 
   const chartData = processChartData();
-  const maxValue =
-    chartData.length > 0
-      ? Math.max(...chartData.map((d) => d.generated + d.saved + d.exported))
-      : 100;
+
+  const chartConfig = {
+    generated: {
+      label: "Generated",
+      color: "hsl(270, 70%, 60%)",
+    },
+    saved: {
+      label: "Saved",
+      color: "hsl(142, 70%, 50%)",
+    },
+    exported: {
+      label: "Exported",
+      color: "hsl(25, 95%, 53%)",
+    },
+  } satisfies ChartConfig;
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-slate-950 transition-colors duration-200 flex flex-col">
@@ -143,6 +187,7 @@ const Analytics = () => {
           <TabsList>
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="trends">Trends</TabsTrigger>
+            <TabsTrigger value="trips">Trip Details</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
@@ -228,7 +273,7 @@ const Analytics = () => {
                   <Skeleton className="h-4 w-64 mt-2" />
                 </CardHeader>
                 <CardContent>
-                  <Skeleton className="h-64 w-full" />
+                  <Skeleton className="h-[350px] w-full" />
                 </CardContent>
               </Card>
             ) : data && chartData.length > 0 ? (
@@ -236,80 +281,65 @@ const Analytics = () => {
                 <CardHeader>
                   <CardTitle>Activity Over Time</CardTitle>
                   <CardDescription>
-                    Daily breakdown of trip planning activity
+                    Daily breakdown of trip planning activity (last{" "}
+                    {chartData.length} days)
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-4 text-sm">
-                      <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded-full bg-purple-500"></div>
-                        <span className="text-slate-600 dark:text-slate-400">
-                          Generated
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                        <span className="text-slate-600 dark:text-slate-400">
-                          Saved
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded-full bg-orange-500"></div>
-                        <span className="text-slate-600 dark:text-slate-400">
-                          Exported
-                        </span>
-                      </div>
-                    </div>
-                    <div className="h-64 flex items-end gap-2">
-                      {chartData.map((day, index) => {
-                        const total = day.generated + day.saved + day.exported;
-                        const genHeight =
-                          maxValue > 0 ? (day.generated / maxValue) * 100 : 0;
-                        const savedHeight =
-                          maxValue > 0 ? (day.saved / maxValue) * 100 : 0;
-                        const exportedHeight =
-                          maxValue > 0 ? (day.exported / maxValue) * 100 : 0;
-
-                        return (
-                          <div
-                            key={index}
-                            className="flex-1 flex flex-col items-center gap-2"
-                          >
-                            <div className="w-full flex flex-col items-center justify-end h-48 gap-0.5">
-                              {day.generated > 0 && (
-                                <div
-                                  className="w-full bg-purple-500 rounded-t transition-all hover:bg-purple-600 cursor-pointer"
-                                  style={{ height: `${genHeight}%` }}
-                                  title={`Generated: ${day.generated}`}
-                                />
-                              )}
-                              {day.saved > 0 && (
-                                <div
-                                  className="w-full bg-green-500 transition-all hover:bg-green-600 cursor-pointer"
-                                  style={{ height: `${savedHeight}%` }}
-                                  title={`Saved: ${day.saved}`}
-                                />
-                              )}
-                              {day.exported > 0 && (
-                                <div
-                                  className="w-full bg-orange-500 rounded-b transition-all hover:bg-orange-600 cursor-pointer"
-                                  style={{ height: `${exportedHeight}%` }}
-                                  title={`Exported: ${day.exported}`}
-                                />
-                              )}
-                            </div>
-                            <span className="text-xs text-slate-500 dark:text-slate-500 rotate-45 origin-left w-16">
-                              {new Date(day.date).toLocaleDateString("en-US", {
-                                month: "short",
-                                day: "numeric",
-                              })}
-                            </span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
+                  <ChartContainer
+                    config={chartConfig}
+                    className="h-[350px] w-full"
+                  >
+                    <BarChart
+                      data={chartData}
+                      margin={{ top: 20, right: 10, left: 10, bottom: 0 }}
+                    >
+                      <CartesianGrid
+                        strokeDasharray="3 3"
+                        className="stroke-slate-200 dark:stroke-slate-800"
+                      />
+                      <XAxis
+                        dataKey="date"
+                        tickFormatter={(value) => {
+                          const date = new Date(value);
+                          return date.toLocaleDateString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                          });
+                        }}
+                        className="text-xs"
+                      />
+                      <YAxis className="text-xs" />
+                      <ChartTooltip
+                        content={<ChartTooltipContent />}
+                        labelFormatter={(value) => {
+                          return new Date(value).toLocaleDateString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
+                          });
+                        }}
+                      />
+                      <Bar
+                        dataKey="generated"
+                        stackId="a"
+                        fill="var(--color-generated)"
+                        radius={[0, 0, 0, 0]}
+                      />
+                      <Bar
+                        dataKey="saved"
+                        stackId="a"
+                        fill="var(--color-saved)"
+                        radius={[0, 0, 0, 0]}
+                      />
+                      <Bar
+                        dataKey="exported"
+                        stackId="a"
+                        fill="var(--color-exported)"
+                        radius={[4, 4, 0, 0]}
+                      />
+                    </BarChart>
+                  </ChartContainer>
                 </CardContent>
               </Card>
             ) : null}
@@ -449,6 +479,103 @@ const Analytics = () => {
                 </Card>
               </div>
             ) : null}
+          </TabsContent>
+
+          <TabsContent value="trips" className="space-y-6">
+            {loading ? (
+              <div className="space-y-4">
+                {[1, 2, 3].map((i) => (
+                  <Card key={i}>
+                    <CardHeader>
+                      <Skeleton className="h-6 w-32" />
+                    </CardHeader>
+                    <CardContent>
+                      <Skeleton className="h-32 w-full" />
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : data?.trips ? (
+              <>
+                {(["generated", "saved", "exported"] as const).map((eventType) => {
+                  const filteredTrips = data.trips.filter(
+                    (trip) => trip.event_type === eventType
+                  );
+
+                  if (filteredTrips.length === 0) return null;
+
+                  return (
+                    <Card key={eventType}>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2 capitalize">
+                          {eventType === "generated" && (
+                            <Sparkles className="h-5 w-5 text-purple-500" />
+                          )}
+                          {eventType === "saved" && (
+                            <Save className="h-5 w-5 text-green-500" />
+                          )}
+                          {eventType === "exported" && (
+                            <Download className="h-5 w-5 text-orange-500" />
+                          )}
+                          {eventType} Trips
+                        </CardTitle>
+                        <CardDescription>
+                          {filteredTrips.length} trip{filteredTrips.length !== 1 ? "s" : ""} in
+                          the selected period
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="rounded-md border">
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead>Destination</TableHead>
+                                <TableHead className="text-center">Days</TableHead>
+                                <TableHead className="text-right">Budget</TableHead>
+                                <TableHead>Creator</TableHead>
+                                <TableHead className="text-right">Date</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {filteredTrips.map((trip, index) => (
+                                <TableRow key={index}>
+                                  <TableCell className="font-medium">
+                                    {trip.trip_destination}
+                                  </TableCell>
+                                  <TableCell className="text-center">
+                                    {trip.trip_days}
+                                  </TableCell>
+                                  <TableCell className="text-right">
+                                    ${trip.trip_budget.toLocaleString()}
+                                  </TableCell>
+                                  <TableCell className="text-slate-600 dark:text-slate-400">
+                                    {trip.creator_name}
+                                  </TableCell>
+                                  <TableCell className="text-right text-slate-600 dark:text-slate-400">
+                                    {new Date(trip.created_at).toLocaleDateString("en-US", {
+                                      month: "short",
+                                      day: "numeric",
+                                      year: "numeric",
+                                    })}
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </>
+            ) : (
+              <div className="text-center py-12">
+                <TableIcon className="h-12 w-12 text-slate-300 dark:text-slate-700 mx-auto mb-4" />
+                <p className="text-slate-600 dark:text-slate-400">
+                  No trip data available
+                </p>
+              </div>
+            )}
           </TabsContent>
         </Tabs>
       </div>
