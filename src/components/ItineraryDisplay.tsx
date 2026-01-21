@@ -1238,11 +1238,7 @@ const ItineraryDisplay = ({
                         >
                           Cost ({tripData.currency})
                         </TableHead>
-                        <TableHead
-                          className={isMobile ? "text-xs py-2 px-2" : ""}
-                        >
-                          Type
-                        </TableHead>
+                        {!isMobile && <TableHead>Type</TableHead>}
                         <TableHead
                           className={
                             isMobile
@@ -1262,7 +1258,7 @@ const ItineraryDisplay = ({
                             className="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-800"
                           >
                             <TableCell
-                              colSpan={5}
+                              colSpan={isMobile ? 4 : 5}
                               className={isMobile ? "py-3 px-2" : "py-4"}
                             >
                               <div className="flex items-center justify-between">
@@ -1309,7 +1305,7 @@ const ItineraryDisplay = ({
                           {dayColumn.items.length === 0 ? (
                             <TableRow key={`day-${dayColumn.day}-empty`}>
                               <TableCell
-                                colSpan={6}
+                                colSpan={isMobile ? 5 : 6}
                                 className={`text-center text-gray-500 dark:text-gray-400 italic ${isMobile ? "py-4 text-xs px-2" : "py-6"}`}
                               >
                                 No activities planned for this day
@@ -1348,26 +1344,24 @@ const ItineraryDisplay = ({
                                     }
                                   >
                                     {item.estimatedCost > 0
-                                      ? `${tripData.currency} ${item.estimatedCost}`
+                                      ? isMobile
+                                        ? item.estimatedCost
+                                        : `${tripData.currency} ${item.estimatedCost}`
                                       : "Free"}
                                   </TableCell>
-                                  <TableCell
-                                    className={
-                                      isMobile ? "text-xs py-2 px-2" : ""
-                                    }
-                                  >
-                                    <Badge
-                                      variant="outline"
-                                      className={`${getTypeColor(item.type)} ${isMobile ? "text-xs px-1.5 py-0.5" : ""}`}
-                                    >
-                                      {getTypeIcon(item.type)}
-                                      {!isMobile && (
+                                  {!isMobile && (
+                                    <TableCell>
+                                      <Badge
+                                        variant="outline"
+                                        className={getTypeColor(item.type)}
+                                      >
+                                        {getTypeIcon(item.type)}
                                         <span className="ml-1 capitalize">
                                           {item.type}
                                         </span>
-                                      )}
-                                    </Badge>
-                                  </TableCell>
+                                      </Badge>
+                                    </TableCell>
+                                  )}
                                   <TableCell
                                     className={
                                       isMobile
