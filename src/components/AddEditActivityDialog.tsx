@@ -23,9 +23,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Edit } from "lucide-react";
+import { Plus, Edit, Clock } from "lucide-react";
 import { ItineraryItem } from "./ItineraryPlanner";
 import { useIsMobile } from "@/hooks/use-mobile";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from "@/components/ui/input-group";
 
 interface AddEditActivityDialogProps {
   day: number;
@@ -123,14 +128,20 @@ const AddEditActivityDialog = ({
         >
           <div className="grid gap-2">
             <Label htmlFor="time">Time</Label>
-            <Input
-              id="time"
-              type="time"
-              value={formData.time}
-              onChange={(e) =>
-                setFormData({ ...formData, time: e.target.value })
-              }
-            />
+            <InputGroup>
+              <InputGroupInput
+                id="time"
+                type="time"
+                value={formData.time}
+                onChange={(e) =>
+                  setFormData({ ...formData, time: e.target.value })
+                }
+                className="appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
+              />
+              <InputGroupAddon>
+                <Clock className="text-muted-foreground" />
+              </InputGroupAddon>
+            </InputGroup>
           </div>
 
           <div className="grid gap-2">
