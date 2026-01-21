@@ -1,11 +1,26 @@
-
 import { Draggable } from "@hello-pangea/dnd";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Clock, MapPin, Plane, Bed, Utensils, Car, Trash2 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Clock,
+  MapPin,
+  Plane,
+  Bed,
+  Utensils,
+  Car,
+  Trash2,
+  ArrowRightLeft,
+} from "lucide-react";
 import { ItineraryItem } from "./ItineraryPlanner";
 import AddEditActivityDialog from "./AddEditActivityDialog";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ItineraryItemCardProps {
   item: ItineraryItem;
@@ -13,21 +28,33 @@ interface ItineraryItemCardProps {
   currency: string;
   onUpdateItem: (item: ItineraryItem) => void;
   onRemoveItem: (itemId: string) => void;
+  totalDays: number;
+  onMoveToDay?: (itemId: string, newDay: number) => void;
 }
 
-const ItineraryItemCard = ({ item, index, currency, onUpdateItem, onRemoveItem }: ItineraryItemCardProps) => {
+const ItineraryItemCard = ({
+  item,
+  index,
+  currency,
+  onUpdateItem,
+  onRemoveItem,
+  totalDays,
+  onMoveToDay,
+}: ItineraryItemCardProps) => {
+  const isMobile = useIsMobile();
+
   const getTypeIcon = (type: string) => {
     switch (type) {
       case "flight":
-        return <Plane className="h-4 w-4" />;
+        return <Plane className={isMobile ? "h-3 w-3" : "h-4 w-4"} />;
       case "accommodation":
-        return <Bed className="h-4 w-4" />;
+        return <Bed className={isMobile ? "h-3 w-3" : "h-4 w-4"} />;
       case "meal":
-        return <Utensils className="h-4 w-4" />;
+        return <Utensils className={isMobile ? "h-3 w-3" : "h-4 w-4"} />;
       case "transport":
-        return <Car className="h-4 w-4" />;
+        return <Car className={isMobile ? "h-3 w-3" : "h-4 w-4"} />;
       default:
-        return <MapPin className="h-4 w-4" />;
+        return <MapPin className={isMobile ? "h-3 w-3" : "h-4 w-4"} />;
     }
   };
 
@@ -57,16 +84,25 @@ const ItineraryItemCard = ({ item, index, currency, onUpdateItem, onRemoveItem }
             snapshot.isDragging ? "shadow-lg rotate-2 scale-105" : ""
           }`}
         >
-          <CardContent className="p-4">
-            <div className="space-y-3">
+          <CardContent className={isMobile ? "p-3" : "p-4"}>
+            <div className={isMobile ? "space-y-2" : "space-y-3"}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
-                  <Badge variant="outline" className={getTypeColor(item.type)}>
+                  <Badge
+                    variant="outline"
+                    className={`${getTypeColor(item.type)} ${isMobile ? "text-xs px-1.5 py-0.5" : ""}`}
+                  >
                     {getTypeIcon(item.type)}
-                    <span className="ml-1 capitalize">{item.type}</span>
+                    <span
+                      className={`ml-1 capitalize ${isMobile ? "hidden" : ""}`}
+                    >
+                      {item.type}
+                    </span>
                   </Badge>
-                  <div className="flex items-center space-x-1 text-sm text-gray-600 dark:text-gray-400">
-                    <Clock className="h-3 w-3" />
+                  <div
+                    className={`flex items-center space-x-1 text-gray-600 dark:text-gray-400 ${isMobile ? "text-xs" : "text-sm"}`}
+                  >
+                    <Clock className={isMobile ? "h-3 w-3" : "h-3 w-3"} />
                     <span>{item.time}</span>
                   </div>
                 </div>
@@ -77,33 +113,69 @@ const ItineraryItemCard = ({ item, index, currency, onUpdateItem, onRemoveItem }
                     e.stopPropagation();
                     onRemoveItem(item.id);
                   }}
-                  className="h-6 w-6 p-0 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+                  className={`p-0 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 ${isMobile ? "h-5 w-5" : "h-6 w-6"}`}
                 >
-                  <Trash2 className="h-3 w-3" />
+                  <Trash2 className={isMobile ? "h-3 w-3" : "h-3 w-3"} />
                 </Button>
               </div>
-              
-              <h4 className="font-medium text-gray-900 dark:text-gray-100 text-sm leading-tight">
+
+              <h4
+                className={`font-medium text-gray-900 dark:text-gray-100 leading-tight ${isMobile ? "text-xs" : "text-sm"}`}
+              >
                 {item.activity}
               </h4>
-              
-              <div className="flex items-center space-x-1 text-sm text-gray-600 dark:text-gray-400">
-                <MapPin className="h-3 w-3" />
+
+              <div
+                className={`flex items-center space-x-1 text-gray-600 dark:text-gray-400 ${isMobile ? "text-xs" : "text-sm"}`}
+              >
+                <MapPin
+                  className={isMobile ? "h-3 w-3 flex-shrink-0" : "h-3 w-3"}
+                />
                 <span className="truncate">{item.location}</span>
               </div>
-              
-              <div className="flex justify-between items-center">
-                <span className="text-sm font-medium">
-                  {item.estimatedCost > 0 ? `${currency} ${item.estimatedCost}` : 'Free'}
+
+              <div className="flex justify-between items-center gap-2">
+                <span
+                  className={`font-medium ${isMobile ? "text-xs" : "text-sm"}`}
+                >
+                  {item.estimatedCost > 0
+                    ? `${currency} ${item.estimatedCost}`
+                    : "Free"}
                 </span>
-                
-                <AddEditActivityDialog
-                  day={item.day}
-                  item={item}
-                  currency={currency}
-                  onSave={onUpdateItem}
-                  isEdit={true}
-                />
+
+                <div className="flex items-center gap-3">
+                  {onMoveToDay && totalDays > 1 && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button className="text-left">
+                          <div className="flex items-center space-x-1 text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300">
+                            <ArrowRightLeft className="h-3 w-3" />
+                            <span>Move</span>
+                          </div>
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        {Array.from({ length: totalDays }, (_, i) => i + 1)
+                          .filter((day) => day !== item.day)
+                          .map((day) => (
+                            <DropdownMenuItem
+                              key={day}
+                              onClick={() => onMoveToDay(item.id, day)}
+                            >
+                              Move to Day {day}
+                            </DropdownMenuItem>
+                          ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
+                  <AddEditActivityDialog
+                    day={item.day}
+                    item={item}
+                    currency={currency}
+                    onSave={onUpdateItem}
+                    isEdit={true}
+                  />
+                </div>
               </div>
             </div>
           </CardContent>

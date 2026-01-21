@@ -156,6 +156,22 @@ const ItineraryDisplay = ({
     });
   };
 
+  const moveItemToDay = (itemId: string, newDay: number) => {
+    const item = itinerary.find((i) => i.id === itemId);
+    if (!item) return;
+
+    const updatedItem = { ...item, day: newDay };
+    const newItinerary = itinerary.map((i) =>
+      i.id === itemId ? updatedItem : i,
+    );
+
+    onUpdateItinerary(newItinerary);
+    toast({
+      title: "Activity moved",
+      description: `"${item.activity}" moved to Day ${newDay}`,
+    });
+  };
+
   const clearAllActivities = () => {
     onUpdateItinerary([]);
     toast({
@@ -851,7 +867,7 @@ const ItineraryDisplay = ({
             <DragDropContext onDragEnd={onDragEnd}>
               <Droppable
                 droppableId="all-columns"
-                direction="horizontal"
+                direction={isMobile ? "vertical" : "horizontal"}
                 type="COLUMN"
               >
                 {(provided) => (
@@ -861,7 +877,9 @@ const ItineraryDisplay = ({
                       provided.innerRef(el);
                       scrollContainerRef.current = el;
                     }}
-                    className="flex gap-6 overflow-x-auto pb-4"
+                    className={
+                      isMobile ? "space-y-4" : "flex gap-6 overflow-x-auto pb-4"
+                    }
                     style={{ scrollbarWidth: "thin" }}
                   >
                     {dayColumns.map((column, columnIndex) => (
@@ -874,25 +892,47 @@ const ItineraryDisplay = ({
                           <div
                             ref={provided.innerRef}
                             {...provided.draggableProps}
-                            className={`bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-slate-200 dark:border-slate-800 hover:shadow-md transition-shadow min-h-[500px] flex flex-col flex-shrink-0 w-[320px] ${
+                            className={`bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-slate-200 dark:border-slate-800 hover:shadow-md transition-shadow flex flex-col flex-shrink-0 ${
+                              isMobile
+                                ? "w-full min-h-[300px]"
+                                : "min-h-[500px] w-[320px]"
+                            } ${
                               snapshot.isDragging ? "opacity-75 rotate-2" : ""
                             }`}
                           >
                             <div
                               {...provided.dragHandleProps}
-                              className="p-4 border-b border-slate-200 dark:border-slate-800 cursor-grab active:cursor-grabbing bg-slate-50 dark:bg-slate-900/50"
+                              className={`border-b border-slate-200 dark:border-slate-800 cursor-grab active:cursor-grabbing bg-slate-50 dark:bg-slate-900/50 ${
+                                isMobile ? "p-3" : "p-4"
+                              }`}
                             >
-                              <div className="flex items-center justify-between mb-3">
+                              <div
+                                className={`flex items-center justify-between ${
+                                  isMobile ? "mb-2" : "mb-3"
+                                }`}
+                              >
                                 <div className="flex items-center gap-2">
-                                  <GripVertical className="h-5 w-5 text-slate-400 dark:text-slate-600" />
-                                  <h3 className="font-semibold text-slate-900 dark:text-slate-50 text-lg">
+                                  <GripVertical
+                                    className={
+                                      isMobile
+                                        ? "h-4 w-4 text-slate-400 dark:text-slate-600"
+                                        : "h-5 w-5 text-slate-400 dark:text-slate-600"
+                                    }
+                                  />
+                                  <h3
+                                    className={`font-semibold text-slate-900 dark:text-slate-50 ${
+                                      isMobile ? "text-base" : "text-lg"
+                                    }`}
+                                  >
                                     Day {column.day}
                                   </h3>
                                 </div>
                                 <div className="flex items-center gap-2">
                                   <Badge
                                     variant="outline"
-                                    className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700"
+                                    className={`bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700 ${
+                                      isMobile ? "text-xs px-1.5 py-0.5" : ""
+                                    }`}
                                   >
                                     {column.items.length}
                                   </Badge>
@@ -900,13 +940,19 @@ const ItineraryDisplay = ({
                                     <Button
                                       variant="ghost"
                                       size="sm"
-                                      className="h-7 w-7 p-0 hover:bg-rose-100 dark:hover:bg-rose-900/30 hover:text-rose-600 dark:hover:text-rose-400"
+                                      className={`p-0 hover:bg-rose-100 dark:hover:bg-rose-900/30 hover:text-rose-600 dark:hover:text-rose-400 ${
+                                        isMobile ? "h-6 w-6" : "h-7 w-7"
+                                      }`}
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         deleteDay(column.day);
                                       }}
                                     >
-                                      <X className="h-4 w-4" />
+                                      <X
+                                        className={
+                                          isMobile ? "h-3 w-3" : "h-4 w-4"
+                                        }
+                                      />
                                     </Button>
                                   )}
                                 </div>
@@ -918,7 +964,9 @@ const ItineraryDisplay = ({
                                 <div
                                   ref={provided.innerRef}
                                   {...provided.droppableProps}
-                                  className={`flex-1 p-4 space-y-3 transition-colors overflow-y-auto ${
+                                  className={`flex-1 space-y-3 transition-colors overflow-y-auto ${
+                                    isMobile ? "p-3" : "p-4"
+                                  } ${
                                     snapshot.isDraggingOver
                                       ? "bg-slate-50 dark:bg-slate-800/50"
                                       : ""
@@ -932,6 +980,8 @@ const ItineraryDisplay = ({
                                       currency={tripData.currency}
                                       onUpdateItem={addOrUpdateActivity}
                                       onRemoveItem={removeActivity}
+                                      totalDays={tripData.days}
+                                      onMoveToDay={moveItemToDay}
                                     />
                                   ))}
                                   {provided.placeholder}
