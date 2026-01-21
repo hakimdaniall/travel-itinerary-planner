@@ -35,6 +35,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState, useRef } from "react";
@@ -48,6 +56,7 @@ import { TripData, ItineraryItem } from "./ItineraryPlanner";
 import ItineraryItemCard from "./ItineraryItemCard";
 import AddEditActivityDialog from "./AddEditActivityDialog";
 import ThemeToggle from "./ThemeToggle";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { useToast } from "@/hooks/use-toast";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -72,6 +81,7 @@ const ItineraryDisplay = ({
   initialCreatorName,
 }: ItineraryDisplayProps) => {
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [creatorName, setCreatorName] = useState("");
   const [loadedCreatorName, setLoadedCreatorName] = useState<string | null>(
@@ -498,44 +508,87 @@ const ItineraryDisplay = ({
 
   return (
     <>
-      <Dialog open={showSaveDialog} onOpenChange={setShowSaveDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Save Project</DialogTitle>
-            <DialogDescription>
-              Enter your name to save this itinerary project
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="creator-name">Your Name</Label>
-              <Input
-                id="creator-name"
-                placeholder="Enter your name"
-                value={creatorName}
-                onChange={(e) => setCreatorName(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    saveItinerary();
-                  }
-                }}
-              />
+      {isMobile ? (
+        <Drawer open={showSaveDialog} onOpenChange={setShowSaveDialog}>
+          <DrawerContent>
+            <DrawerHeader>
+              <DrawerTitle>Save Project</DrawerTitle>
+              <DrawerDescription>
+                Enter your name to save this itinerary project
+              </DrawerDescription>
+            </DrawerHeader>
+            <div className="px-4 pb-4">
+              <div className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="creator-name">Your Name</Label>
+                  <Input
+                    id="creator-name"
+                    placeholder="Enter your name"
+                    value={creatorName}
+                    onChange={(e) => setCreatorName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        saveItinerary();
+                      }
+                    }}
+                  />
+                </div>
+              </div>
+              <DrawerFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowSaveDialog(false);
+                    setCreatorName("");
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button onClick={saveItinerary}>Save Project</Button>
+              </DrawerFooter>
             </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setShowSaveDialog(false);
-                setCreatorName("");
-              }}
-            >
-              Cancel
-            </Button>
-            <Button onClick={saveItinerary}>Save Project</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </DrawerContent>
+        </Drawer>
+      ) : (
+        <Dialog open={showSaveDialog} onOpenChange={setShowSaveDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Save Project</DialogTitle>
+              <DialogDescription>
+                Enter your name to save this itinerary project
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="creator-name">Your Name</Label>
+                <Input
+                  id="creator-name"
+                  placeholder="Enter your name"
+                  value={creatorName}
+                  onChange={(e) => setCreatorName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      saveItinerary();
+                    }
+                  }}
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowSaveDialog(false);
+                  setCreatorName("");
+                }}
+              >
+                Cancel
+              </Button>
+              <Button onClick={saveItinerary}>Save Project</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
 
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -664,7 +717,7 @@ const ItineraryDisplay = ({
         </div>
 
         <Tabs defaultValue="kanban" className="w-full">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-4 flex-wrap gap-4">
             <TabsList className="grid w-auto grid-cols-2">
               <TabsTrigger value="kanban">Kanban Board</TabsTrigger>
               <TabsTrigger value="table">Table View</TabsTrigger>
