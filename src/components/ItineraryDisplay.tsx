@@ -76,7 +76,7 @@ import ItineraryItemCard from "./ItineraryItemCard";
 import AddEditActivityDialog from "./AddEditActivityDialog";
 import ThemeToggle from "./ThemeToggle";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
@@ -99,7 +99,6 @@ const ItineraryDisplay = ({
   onUpdateTripData,
   initialCreatorName,
 }: ItineraryDisplayProps) => {
-  const { toast } = useToast();
   const isMobile = useIsMobile();
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [creatorName, setCreatorName] = useState("");
@@ -124,18 +123,11 @@ const ItineraryDisplay = ({
     if (newBudget > 0) {
       onUpdateTripData({ ...tripData, budget: newBudget });
       setShowBudgetDialog(false);
-      toast({
-        title: "Budget updated",
-        description: `Budget set to ${tripData.currency} ${newBudget}`,
-      });
+      toast.success(`Budget set to ${tripData.currency} ${newBudget}`);
     } else {
-      toast({
-        title: "Invalid budget",
-        description: "Budget must be greater than 0",
-        variant: "destructive",
-      });
+      toast.error("Budget must be greater than 0");
     }
-  }, [budgetValue, tripData, onUpdateTripData, toast]);
+  }, [budgetValue, tripData, onUpdateTripData]);
 
   const handleBudgetCancel = useCallback(() => {
     setShowBudgetDialog(false);
@@ -151,18 +143,12 @@ const ItineraryDisplay = ({
         const newItinerary = [...itinerary];
         newItinerary[existingIndex] = item;
         onUpdateItinerary(newItinerary);
-        toast({
-          title: "Activity updated",
-          description: `"${item.activity}" has been updated`,
-        });
+        toast.success(`"${item.activity}" has been updated`);
       } else {
         // Add new item
         const newItinerary = [...itinerary, item];
         onUpdateItinerary(newItinerary);
-        toast({
-          title: "Activity added",
-          description: `"${item.activity}" has been added to Day ${item.day}`,
-        });
+        toast.success(`"${item.activity}" has been added to Day ${item.day}`);
       }
     },
     [itinerary, onUpdateItinerary, toast],
@@ -173,14 +159,11 @@ const ItineraryDisplay = ({
       const item = itinerary.find((i) => i.id === itemId);
       const newItinerary = itinerary.filter((i) => i.id !== itemId);
       onUpdateItinerary(newItinerary);
-      toast({
-        title: "Activity removed",
-        description: item
-          ? `"${item.activity}" has been removed`
-          : "Activity removed",
-      });
+      toast.success(
+        item ? `"${item.activity}" has been removed` : "Activity removed",
+      );
     },
-    [itinerary, onUpdateItinerary, toast],
+    [itinerary, onUpdateItinerary],
   );
 
   const moveItemToDay = useCallback(
@@ -194,10 +177,7 @@ const ItineraryDisplay = ({
       );
 
       onUpdateItinerary(newItinerary);
-      toast({
-        title: "Activity moved",
-        description: `"${item.activity}" moved to Day ${newDay}`,
-      });
+      toast.success(`"${item.activity}" moved to Day ${newDay}`);
     },
     [itinerary, onUpdateItinerary, toast],
   );
@@ -222,10 +202,7 @@ const ItineraryDisplay = ({
 
   const confirmClearAll = () => {
     onUpdateItinerary([]);
-    toast({
-      title: "All activities cleared",
-      description: "All activities have been removed from your itinerary",
-    });
+    toast.success("All activities have been removed from your itinerary");
     setShowClearAllDialog(false);
   };
 
@@ -235,10 +212,7 @@ const ItineraryDisplay = ({
       days: tripData.days + 1,
     };
     onUpdateTripData(newTripData);
-    toast({
-      title: "Day added",
-      description: `Day ${tripData.days + 1} has been added to your itinerary`,
-    });
+    toast.success(`Day ${tripData.days + 1} has been added to your itinerary`);
 
     // Scroll to the rightmost position after a short delay to allow render
     setTimeout(() => {
@@ -278,10 +252,9 @@ const ItineraryDisplay = ({
     onUpdateItinerary(renumberedItinerary);
     onUpdateTripData(newTripData);
 
-    toast({
-      title: "Day deleted",
-      description: `Day ${deleteDayNumber} has been removed from your itinerary`,
-    });
+    toast.success(
+      `Day ${deleteDayNumber} has been removed from your itinerary`,
+    );
 
     setDeleteDayNumber(null);
   };
@@ -294,11 +267,7 @@ const ItineraryDisplay = ({
 
   const confirmDownloadPDF = () => {
     if (!pdfFileName.trim()) {
-      toast({
-        title: "Filename required",
-        description: "Please enter a filename for your PDF",
-        variant: "destructive",
-      });
+      toast.error("Please enter a filename for your PDF");
       return;
     }
 
@@ -380,10 +349,7 @@ const ItineraryDisplay = ({
     const fileName = `${pdfFileName.trim()}.pdf`;
     doc.save(fileName);
 
-    toast({
-      title: "PDF Downloaded",
-      description: `Your itinerary has been saved as ${fileName}`,
-    });
+    toast.success(`Your itinerary has been saved as ${fileName}`);
 
     setShowPdfDialog(false);
     setPdfFileName("");
@@ -395,11 +361,7 @@ const ItineraryDisplay = ({
 
   const saveItinerary = () => {
     if (!creatorName.trim()) {
-      toast({
-        title: "Name Required",
-        description: "Please enter your name before saving",
-        variant: "destructive",
-      });
+      toast.error("Please enter your name before saving");
       return;
     }
 
@@ -432,10 +394,7 @@ const ItineraryDisplay = ({
     setLoadedCreatorName(creatorName.trim());
     setCreatorName("");
 
-    toast({
-      title: "Itinerary Saved",
-      description: `Your itinerary has been saved as ${fileName}`,
-    });
+    toast.success(`Your itinerary has been saved as ${fileName}`);
   };
 
   const loadItinerary = () => {
@@ -471,17 +430,11 @@ const ItineraryDisplay = ({
               setLoadedCreatorName(data.createdBy);
             }
 
-            toast({
-              title: "Itinerary Loaded",
-              description: "Your saved itinerary has been loaded successfully",
-            });
+            toast.success("Your saved itinerary has been loaded successfully");
           } catch (error) {
-            toast({
-              title: "Error Loading File",
-              description:
-                "The file could not be loaded. Please make sure it's a valid itinerary file.",
-              variant: "destructive",
-            });
+            toast.error(
+              "The file could not be loaded. Please make sure it's a valid itinerary file.",
+            );
           }
         };
         reader.readAsText(file);
@@ -535,10 +488,7 @@ const ItineraryDisplay = ({
     );
 
     onUpdateItinerary(newItinerary);
-    toast({
-      title: "Activity moved",
-      description: `"${item.activity}" moved to Day ${destinationDay}`,
-    });
+    toast.success(`"${item.activity}" moved to Day ${destinationDay}`);
   };
 
   const reorderDays = (newDayOrder: number[]) => {
@@ -553,10 +503,7 @@ const ItineraryDisplay = ({
     }));
 
     onUpdateItinerary(newItinerary);
-    toast({
-      title: "Days reordered",
-      description: "Your itinerary days have been reordered",
-    });
+    toast.success("Your itinerary days have been reordered");
   };
 
   const getTypeIcon = (type: string) => {

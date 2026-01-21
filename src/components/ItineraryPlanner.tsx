@@ -5,7 +5,7 @@ import TripForm from "./TripForm";
 import ItineraryDisplay from "./ItineraryDisplay";
 import { fetchItineraryFromGroq } from "./../api/groqApi";
 import { Upload } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 export interface TripData {
   fromDestination: string;
@@ -35,7 +35,6 @@ const ItineraryPlanner = () => {
   const [loadedCreatorName, setLoadedCreatorName] = useState<string | null>(
     null,
   );
-  const { toast } = useToast();
 
   const generateItinerary = async (data: TripData) => {
     setIsGenerating(true);
@@ -57,8 +56,7 @@ const ItineraryPlanner = () => {
   const createCustomItinerary = (data: TripData) => {
     setTripData(data);
     setItinerary([]);
-    toast({
-      title: "Custom Itinerary Created",
+    toast.success("Custom Itinerary Created", {
       description: "Start building your trip by adding activities to each day",
     });
   };
@@ -110,16 +108,13 @@ const ItineraryPlanner = () => {
               setLoadedCreatorName(data.createdBy);
             }
 
-            toast({
-              title: "Itinerary Loaded",
+            toast.success("Itinerary Loaded", {
               description: "Your saved itinerary has been loaded successfully",
             });
           } catch (error) {
-            toast({
-              title: "Error Loading File",
+            toast.error("Error Loading File", {
               description:
                 "The file could not be loaded. Please make sure it's a valid itinerary file.",
-              variant: "destructive",
             });
           }
         };

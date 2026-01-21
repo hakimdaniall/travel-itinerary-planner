@@ -1,10 +1,9 @@
-
 import { useState } from "react";
 import { DragDropContext, Droppable, DropResult } from "@hello-pangea/dnd";
 import Column from "./Column";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 export interface Task {
   id: string;
@@ -21,7 +20,6 @@ export interface Column {
 }
 
 const KanbanBoard = () => {
-  const { toast } = useToast();
   const [columns, setColumns] = useState<Column[]>([
     {
       id: "todo",
@@ -32,16 +30,16 @@ const KanbanBoard = () => {
           title: "Design user interface",
           description: "Create mockups for the new dashboard",
           priority: "high",
-          assignee: "John Doe"
+          assignee: "John Doe",
         },
         {
           id: "task-2",
           title: "Set up database",
           description: "Configure PostgreSQL database with initial schema",
           priority: "medium",
-          assignee: "Jane Smith"
-        }
-      ]
+          assignee: "Jane Smith",
+        },
+      ],
     },
     {
       id: "in-progress",
@@ -52,9 +50,9 @@ const KanbanBoard = () => {
           title: "Implement authentication",
           description: "Add login and registration functionality",
           priority: "high",
-          assignee: "Mike Johnson"
-        }
-      ]
+          assignee: "Mike Johnson",
+        },
+      ],
     },
     {
       id: "review",
@@ -65,9 +63,9 @@ const KanbanBoard = () => {
           title: "Code review for API endpoints",
           description: "Review and test all REST API endpoints",
           priority: "medium",
-          assignee: "Sarah Wilson"
-        }
-      ]
+          assignee: "Sarah Wilson",
+        },
+      ],
     },
     {
       id: "done",
@@ -78,10 +76,10 @@ const KanbanBoard = () => {
           title: "Project planning",
           description: "Define project scope and requirements",
           priority: "low",
-          assignee: "Tom Brown"
-        }
-      ]
-    }
+          assignee: "Tom Brown",
+        },
+      ],
+    },
   ]);
 
   const onDragEnd = (result: DropResult) => {
@@ -98,19 +96,21 @@ const KanbanBoard = () => {
       return;
     }
 
-    const sourceColumn = columns.find(col => col.id === source.droppableId);
-    const destinationColumn = columns.find(col => col.id === destination.droppableId);
+    const sourceColumn = columns.find((col) => col.id === source.droppableId);
+    const destinationColumn = columns.find(
+      (col) => col.id === destination.droppableId,
+    );
 
     if (!sourceColumn || !destinationColumn) {
       return;
     }
 
-    const task = sourceColumn.tasks.find(task => task.id === draggableId);
+    const task = sourceColumn.tasks.find((task) => task.id === draggableId);
     if (!task) {
       return;
     }
 
-    const newColumns = columns.map(column => {
+    const newColumns = columns.map((column) => {
       if (column.id === source.droppableId) {
         const newTasks = [...column.tasks];
         newTasks.splice(source.index, 1);
@@ -125,19 +125,16 @@ const KanbanBoard = () => {
     });
 
     setColumns(newColumns);
-    toast({
-      title: "Task moved",
-      description: `"${task.title}" moved to ${destinationColumn.title}`,
-    });
+    toast.success(`"${task.title}" moved to ${destinationColumn.title}`);
   };
 
   const addTask = (columnId: string, task: Omit<Task, "id">) => {
     const newTask: Task = {
       ...task,
-      id: `task-${Date.now()}`
+      id: `task-${Date.now()}`,
     };
 
-    const newColumns = columns.map(column => {
+    const newColumns = columns.map((column) => {
       if (column.id === columnId) {
         return { ...column, tasks: [...column.tasks, newTask] };
       }
@@ -145,30 +142,28 @@ const KanbanBoard = () => {
     });
 
     setColumns(newColumns);
-    toast({
-      title: "Task added",
-      description: `"${task.title}" has been added to ${columns.find(c => c.id === columnId)?.title}`,
-    });
+    toast.success(
+      `"${task.title}" has been added to ${columns.find((c) => c.id === columnId)?.title}`,
+    );
   };
 
   const deleteTask = (columnId: string, taskId: string) => {
-    const newColumns = columns.map(column => {
+    const newColumns = columns.map((column) => {
       if (column.id === columnId) {
-        return { ...column, tasks: column.tasks.filter(task => task.id !== taskId) };
+        return {
+          ...column,
+          tasks: column.tasks.filter((task) => task.id !== taskId),
+        };
       }
       return column;
     });
 
     const deletedTask = columns
-      .find(c => c.id === columnId)
-      ?.tasks.find(t => t.id === taskId);
+      .find((c) => c.id === columnId)
+      ?.tasks.find((t) => t.id === taskId);
 
     setColumns(newColumns);
-    toast({
-      title: "Task deleted",
-      description: `"${deletedTask?.title}" has been removed`,
-      variant: "destructive"
-    });
+    toast.error(`"${deletedTask?.title}" has been removed`);
   };
 
   return (
