@@ -104,6 +104,8 @@ const ItineraryDisplay = ({
   const [budgetValue, setBudgetValue] = useState(tripData.budget.toString());
   const [deleteDayNumber, setDeleteDayNumber] = useState<number | null>(null);
   const [showClearAllDialog, setShowClearAllDialog] = useState(false);
+  const [showPdfDialog, setShowPdfDialog] = useState(false);
+  const [pdfFileName, setPdfFileName] = useState("");
 
   const handleBudgetEdit = () => {
     setShowBudgetDialog(true);
@@ -255,6 +257,21 @@ const ItineraryDisplay = ({
   };
 
   const downloadPDF = () => {
+    const defaultName = `${format(new Date(), "yyyyMMdd")}-itinerary-${tripData.destinations[0].replace(/\s+/g, "-").toLowerCase()}`;
+    setPdfFileName(defaultName);
+    setShowPdfDialog(true);
+  };
+
+  const confirmDownloadPDF = () => {
+    if (!pdfFileName.trim()) {
+      toast({
+        title: "Filename required",
+        description: "Please enter a filename for your PDF",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const doc = new jsPDF();
 
     // Add title
@@ -330,13 +347,16 @@ const ItineraryDisplay = ({
     });
 
     // Save the PDF
-    const fileName = `${format(new Date(), "yyyyMMdd")}-itinerary-${tripData.destinations[0].replace(/\s+/g, "-").toLowerCase()}.pdf`;
+    const fileName = `${pdfFileName.trim()}.pdf`;
     doc.save(fileName);
 
     toast({
       title: "PDF Downloaded",
       description: `Your itinerary has been saved as ${fileName}`,
     });
+
+    setShowPdfDialog(false);
+    setPdfFileName("");
   };
 
   const handleSaveClick = () => {
@@ -792,6 +812,84 @@ const ItineraryDisplay = ({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {isMobile ? (
+        <Drawer open={showPdfDialog} onOpenChange={setShowPdfDialog}>
+          <DrawerContent>
+            <DrawerHeader>
+              <DrawerTitle>Download PDF</DrawerTitle>
+              <DrawerDescription>
+                Enter a filename for your itinerary PDF
+              </DrawerDescription>
+            </DrawerHeader>
+            <div className="px-4 pb-4">
+              <div className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="pdf-filename">Filename</Label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      id="pdf-filename"
+                      placeholder="Enter filename"
+                      value={pdfFileName}
+                      onChange={(e) => setPdfFileName(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") confirmDownloadPDF();
+                        if (e.key === "Escape") setShowPdfDialog(false);
+                      }}
+                    />
+                    <span className="text-sm text-muted-foreground">.pdf</span>
+                  </div>
+                </div>
+              </div>
+              <DrawerFooter>
+                <Button onClick={confirmDownloadPDF}>Download</Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowPdfDialog(false)}
+                >
+                  Cancel
+                </Button>
+              </DrawerFooter>
+            </div>
+          </DrawerContent>
+        </Drawer>
+      ) : (
+        <Dialog open={showPdfDialog} onOpenChange={setShowPdfDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Download PDF</DialogTitle>
+              <DialogDescription>
+                Enter a filename for your itinerary PDF
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="pdf-filename">Filename</Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    id="pdf-filename"
+                    placeholder="Enter filename"
+                    value={pdfFileName}
+                    onChange={(e) => setPdfFileName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") confirmDownloadPDF();
+                      if (e.key === "Escape") setShowPdfDialog(false);
+                    }}
+                    autoFocus
+                  />
+                  <span className="text-sm text-muted-foreground">.pdf</span>
+                </div>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowPdfDialog(false)}>
+                Cancel
+              </Button>
+              <Button onClick={confirmDownloadPDF}>Download</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
 
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
