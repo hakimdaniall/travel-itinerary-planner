@@ -38,6 +38,16 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Drawer,
   DrawerContent,
   DrawerDescription,
@@ -92,6 +102,8 @@ const ItineraryDisplay = ({
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [showBudgetDialog, setShowBudgetDialog] = useState(false);
   const [budgetValue, setBudgetValue] = useState(tripData.budget.toString());
+  const [deleteDayNumber, setDeleteDayNumber] = useState<number | null>(null);
+  const [showClearAllDialog, setShowClearAllDialog] = useState(false);
 
   const handleBudgetEdit = () => {
     setShowBudgetDialog(true);
@@ -173,11 +185,16 @@ const ItineraryDisplay = ({
   };
 
   const clearAllActivities = () => {
+    setShowClearAllDialog(true);
+  };
+
+  const confirmClearAll = () => {
     onUpdateItinerary([]);
     toast({
       title: "All activities cleared",
       description: "All activities have been removed from your itinerary",
     });
+    setShowClearAllDialog(false);
   };
 
   const addDay = () => {
@@ -203,13 +220,21 @@ const ItineraryDisplay = ({
   };
 
   const deleteDay = (dayNumber: number) => {
+    setDeleteDayNumber(dayNumber);
+  };
+
+  const confirmDeleteDay = () => {
+    if (deleteDayNumber === null) return;
+
     // Remove all activities for this day
-    const newItinerary = itinerary.filter((item) => item.day !== dayNumber);
+    const newItinerary = itinerary.filter(
+      (item) => item.day !== deleteDayNumber,
+    );
 
     // Renumber remaining days
     const renumberedItinerary = newItinerary.map((item) => ({
       ...item,
-      day: item.day > dayNumber ? item.day - 1 : item.day,
+      day: item.day > deleteDayNumber ? item.day - 1 : item.day,
     }));
 
     // Update trip data
@@ -223,8 +248,10 @@ const ItineraryDisplay = ({
 
     toast({
       title: "Day deleted",
-      description: `Day ${dayNumber} has been removed from your itinerary`,
+      description: `Day ${deleteDayNumber} has been removed from your itinerary`,
     });
+
+    setDeleteDayNumber(null);
   };
 
   const downloadPDF = () => {
@@ -716,6 +743,55 @@ const ItineraryDisplay = ({
           </DialogContent>
         </Dialog>
       )}
+
+      <AlertDialog
+        open={deleteDayNumber !== null}
+        onOpenChange={(open) => !open && setDeleteDayNumber(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Day {deleteDayNumber}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete Day {deleteDayNumber} and all its
+              activities. Remaining days will be renumbered. This action cannot
+              be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDeleteDay}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        open={showClearAllDialog}
+        onOpenChange={setShowClearAllDialog}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Clear All Activities?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete all activities from all days in your
+              itinerary. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmClearAll}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Clear All
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
