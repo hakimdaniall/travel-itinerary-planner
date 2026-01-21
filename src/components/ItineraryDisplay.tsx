@@ -1,3 +1,5 @@
+import * as React from "react";
+import { useState, useRef, useMemo, useCallback } from "react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -29,6 +31,8 @@ import {
   Edit2,
   Edit,
   ArrowRightLeft,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import {
   Dialog,
@@ -64,7 +68,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useState, useRef, useMemo, useCallback } from "react";
 import {
   DragDropContext,
   Droppable,
@@ -115,6 +118,8 @@ const ItineraryDisplay = ({
   const [pdfFileName, setPdfFileName] = useState("");
   const [isExporting, setIsExporting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [showLeftArrow, setShowLeftArrow] = useState(false);
+  const [showRightArrow, setShowRightArrow] = useState(false);
 
   const handleBudgetEdit = useCallback(() => {
     setShowBudgetDialog(true);
@@ -136,6 +141,33 @@ const ItineraryDisplay = ({
     setShowBudgetDialog(false);
     setBudgetValue(tripData.budget.toString());
   }, [tripData.budget]);
+
+  const checkScrollButtons = useCallback(() => {
+    if (scrollContainerRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } =
+        scrollContainerRef.current;
+      setShowLeftArrow(scrollLeft > 0);
+      setShowRightArrow(scrollLeft < scrollWidth - clientWidth - 5);
+    }
+  }, []);
+
+  const scrollLeft = useCallback(() => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({
+        left: -340,
+        behavior: "smooth",
+      });
+    }
+  }, []);
+
+  const scrollRight = useCallback(() => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({
+        left: 340,
+        behavior: "smooth",
+      });
+    }
+  }, []);
 
   const addOrUpdateActivity = useCallback(
     (item: ItineraryItem) => {
@@ -611,6 +643,19 @@ const ItineraryDisplay = ({
       }),
     [tripData.days, groupedByDay],
   );
+
+  React.useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (container && !isMobile) {
+      checkScrollButtons();
+      container.addEventListener("scroll", checkScrollButtons);
+      window.addEventListener("resize", checkScrollButtons);
+      return () => {
+        container.removeEventListener("scroll", checkScrollButtons);
+        window.removeEventListener("resize", checkScrollButtons);
+      };
+    }
+  }, [checkScrollButtons, isMobile, dayColumns]);
 
   if (isGenerating) {
     return (
@@ -1108,6 +1153,33 @@ const ItineraryDisplay = ({
               <TabsTrigger value="kanban">Kanban Board</TabsTrigger>
               <TabsTrigger value="table">Table View</TabsTrigger>
             </TabsList>
+            {!isMobile && (
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={scrollLeft}
+                  disabled={!showLeftArrow}
+                  className="gap-1"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  Previous
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={scrollRight}
+                  disabled={!showRightArrow}
+                  className="gap-1"
+                >
+                  Next
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+          </div>
+
+          <div className="mb-4">
             <Button onClick={addDay} variant="outline" size="sm">
               <Plus className="h-4 w-4 mr-2" />
               Add Day
@@ -1298,6 +1370,31 @@ const ItineraryDisplay = ({
                 )}
               </Droppable>
             </DragDropContext>
+
+            {!isMobile && (
+              <div className="flex items-center justify-end gap-2 mt-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={scrollLeft}
+                  disabled={!showLeftArrow}
+                  className="gap-1"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  Previous
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={scrollRight}
+                  disabled={!showRightArrow}
+                  className="gap-1"
+                >
+                  Next
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
           </TabsContent>
           <TabsContent value="table" className="space-y-4">
             <Card>
