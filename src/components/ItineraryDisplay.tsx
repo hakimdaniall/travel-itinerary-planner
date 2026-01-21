@@ -400,13 +400,15 @@ const ItineraryDisplay = ({
 
     setShowSaveDialog(false);
     setLoadedCreatorName(creatorName.trim());
+    const savedCreatorName = creatorName.trim();
     setCreatorName("");
 
-    // Track save event
+    // Track save event with creator name
     analyticsService.trackSaved(
       tripData.destinations[0] || "Unknown",
       tripData.days,
       tripData.budget,
+      savedCreatorName,
     );
 
     toast.success(`Your itinerary has been saved as ${fileName}`);

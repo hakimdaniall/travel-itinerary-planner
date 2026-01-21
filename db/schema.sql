@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS trip_analytics (
     trip_destination VARCHAR(255),
     trip_days INTEGER,
     trip_budget DECIMAL(10, 2),
+    creator_name VARCHAR(255),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     user_agent TEXT,
     session_id VARCHAR(100)

@@ -13,6 +13,7 @@ interface TrackEventBody {
   tripDestination?: string;
   tripDays?: number;
   tripBudget?: number;
+  creatorName?: string;
   sessionId?: string;
 }
 
@@ -44,8 +45,14 @@ export const handler: Handler = async (event) => {
 
   try {
     const body: TrackEventBody = JSON.parse(event.body || "{}");
-    const { eventType, tripDestination, tripDays, tripBudget, sessionId } =
-      body;
+    const {
+      eventType,
+      tripDestination,
+      tripDays,
+      tripBudget,
+      creatorName,
+      sessionId,
+    } = body;
 
     // Validate event type
     if (!eventType || !["generated", "saved", "exported"].includes(eventType)) {
@@ -62,9 +69,9 @@ export const handler: Handler = async (event) => {
     // Insert into database
     const query = `
       INSERT INTO trip_analytics 
-        (event_type, trip_destination, trip_days, trip_budget, user_agent, session_id)
+        (event_type, trip_destination, trip_days, trip_budget, creator_name, user_agent, session_id)
       VALUES 
-        ($1, $2, $3, $4, $5, $6)
+        ($1, $2, $3, $4, $5, $6, $7)
       RETURNING id, created_at
     `;
 
@@ -73,6 +80,7 @@ export const handler: Handler = async (event) => {
       tripDestination || null,
       tripDays || null,
       tripBudget || null,
+      creatorName || null,
       userAgent,
       sessionId || null,
     ];

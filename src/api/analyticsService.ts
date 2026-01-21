@@ -5,6 +5,7 @@ interface TrackEventParams {
   tripDestination?: string;
   tripDays?: number;
   tripBudget?: number;
+  creatorName?: string;
 }
 
 interface AnalyticsStats {
@@ -88,12 +89,14 @@ class AnalyticsService {
     tripDestination: string,
     tripDays: number,
     tripBudget: number,
+    creatorName?: string,
   ): Promise<void> {
     return this.trackEvent({
       eventType: "saved",
       tripDestination,
       tripDays,
       tripBudget,
+      creatorName,
     });
   }
 
