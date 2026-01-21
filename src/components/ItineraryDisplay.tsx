@@ -26,6 +26,8 @@ import {
   Plus,
   GripVertical,
   X,
+  Edit2,
+  Edit,
 } from "lucide-react";
 import {
   Dialog,
@@ -88,6 +90,36 @@ const ItineraryDisplay = ({
     initialCreatorName || null,
   );
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [showBudgetDialog, setShowBudgetDialog] = useState(false);
+  const [budgetValue, setBudgetValue] = useState(tripData.budget.toString());
+
+  const handleBudgetEdit = () => {
+    setShowBudgetDialog(true);
+    setBudgetValue(tripData.budget.toString());
+  };
+
+  const handleBudgetSave = () => {
+    const newBudget = Number(budgetValue);
+    if (newBudget > 0) {
+      onUpdateTripData({ ...tripData, budget: newBudget });
+      setShowBudgetDialog(false);
+      toast({
+        title: "Budget updated",
+        description: `Budget set to ${tripData.currency} ${newBudget}`,
+      });
+    } else {
+      toast({
+        title: "Invalid budget",
+        description: "Budget must be greater than 0",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleBudgetCancel = () => {
+    setShowBudgetDialog(false);
+    setBudgetValue(tripData.budget.toString());
+  };
 
   const addOrUpdateActivity = (item: ItineraryItem) => {
     const existingIndex = itinerary.findIndex((i) => i.id === item.id);
@@ -590,6 +622,85 @@ const ItineraryDisplay = ({
         </Dialog>
       )}
 
+      {isMobile ? (
+        <Drawer open={showBudgetDialog} onOpenChange={setShowBudgetDialog}>
+          <DrawerContent>
+            <DrawerHeader>
+              <DrawerTitle>Edit Budget</DrawerTitle>
+              <DrawerDescription>Update your trip budget</DrawerDescription>
+            </DrawerHeader>
+            <div className="px-4 pb-4">
+              <div className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="budget-amount">Budget Amount</Label>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-muted-foreground">
+                      {tripData.currency}
+                    </span>
+                    <Input
+                      id="budget-amount"
+                      type="number"
+                      min="1"
+                      value={budgetValue}
+                      onChange={(e) => setBudgetValue(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") handleBudgetSave();
+                        if (e.key === "Escape") handleBudgetCancel();
+                      }}
+                      placeholder="Enter budget amount"
+                    />
+                  </div>
+                </div>
+              </div>
+              <DrawerFooter>
+                <Button onClick={handleBudgetSave}>Save Budget</Button>
+                <Button variant="outline" onClick={handleBudgetCancel}>
+                  Cancel
+                </Button>
+              </DrawerFooter>
+            </div>
+          </DrawerContent>
+        </Drawer>
+      ) : (
+        <Dialog open={showBudgetDialog} onOpenChange={setShowBudgetDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit Budget</DialogTitle>
+              <DialogDescription>Update your trip budget</DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="budget-amount">Budget Amount</Label>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">
+                    {tripData.currency}
+                  </span>
+                  <Input
+                    id="budget-amount"
+                    type="number"
+                    min="1"
+                    value={budgetValue}
+                    onChange={(e) => setBudgetValue(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") handleBudgetSave();
+                      if (e.key === "Escape") handleBudgetCancel();
+                    }}
+                    placeholder="Enter budget amount"
+                    autoFocus
+                  />
+                </div>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={handleBudgetCancel}>
+                Cancel
+              </Button>
+              <Button onClick={handleBudgetSave}>Save Budget</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-2">
@@ -674,7 +785,7 @@ const ItineraryDisplay = ({
           </Card>
 
           <Card className="border border-slate-200 dark:border-slate-800">
-            <CardContent className="p-6">
+            <CardContent className="p-6 relative">
               <div className="flex items-center space-x-3">
                 <div className="p-3 rounded-lg bg-blue-100 dark:bg-blue-900/30">
                   <DollarSign className="h-5 w-5 text-blue-600 dark:text-blue-400" />
@@ -688,6 +799,14 @@ const ItineraryDisplay = ({
                   </p>
                 </div>
               </div>
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={handleBudgetEdit}
+                className="h-6 w-6 absolute top-4 right-4 hover:bg-blue-100 dark:hover:bg-blue-900/30 hover:text-blue-600 dark:hover:text-blue-400"
+              >
+                <Edit className="h-4 w-4" />
+              </Button>
             </CardContent>
           </Card>
 
