@@ -64,7 +64,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo, useCallback } from "react";
 import {
   DragDropContext,
   Droppable,
@@ -114,12 +114,12 @@ const ItineraryDisplay = ({
   const [showPdfDialog, setShowPdfDialog] = useState(false);
   const [pdfFileName, setPdfFileName] = useState("");
 
-  const handleBudgetEdit = () => {
+  const handleBudgetEdit = useCallback(() => {
     setShowBudgetDialog(true);
     setBudgetValue(tripData.budget.toString());
-  };
+  }, [tripData.budget]);
 
-  const handleBudgetSave = () => {
+  const handleBudgetSave = useCallback(() => {
     const newBudget = Number(budgetValue);
     if (newBudget > 0) {
       onUpdateTripData({ ...tripData, budget: newBudget });
@@ -135,63 +135,72 @@ const ItineraryDisplay = ({
         variant: "destructive",
       });
     }
-  };
+  }, [budgetValue, tripData, onUpdateTripData, toast]);
 
-  const handleBudgetCancel = () => {
+  const handleBudgetCancel = useCallback(() => {
     setShowBudgetDialog(false);
     setBudgetValue(tripData.budget.toString());
-  };
+  }, [tripData.budget]);
 
-  const addOrUpdateActivity = (item: ItineraryItem) => {
-    const existingIndex = itinerary.findIndex((i) => i.id === item.id);
+  const addOrUpdateActivity = useCallback(
+    (item: ItineraryItem) => {
+      const existingIndex = itinerary.findIndex((i) => i.id === item.id);
 
-    if (existingIndex >= 0) {
-      // Update existing item
-      const newItinerary = [...itinerary];
-      newItinerary[existingIndex] = item;
+      if (existingIndex >= 0) {
+        // Update existing item
+        const newItinerary = [...itinerary];
+        newItinerary[existingIndex] = item;
+        onUpdateItinerary(newItinerary);
+        toast({
+          title: "Activity updated",
+          description: `"${item.activity}" has been updated`,
+        });
+      } else {
+        // Add new item
+        const newItinerary = [...itinerary, item];
+        onUpdateItinerary(newItinerary);
+        toast({
+          title: "Activity added",
+          description: `"${item.activity}" has been added to Day ${item.day}`,
+        });
+      }
+    },
+    [itinerary, onUpdateItinerary, toast],
+  );
+
+  const removeActivity = useCallback(
+    (itemId: string) => {
+      const item = itinerary.find((i) => i.id === itemId);
+      const newItinerary = itinerary.filter((i) => i.id !== itemId);
       onUpdateItinerary(newItinerary);
       toast({
-        title: "Activity updated",
-        description: `"${item.activity}" has been updated`,
+        title: "Activity removed",
+        description: item
+          ? `"${item.activity}" has been removed`
+          : "Activity removed",
       });
-    } else {
-      // Add new item
-      const newItinerary = [...itinerary, item];
+    },
+    [itinerary, onUpdateItinerary, toast],
+  );
+
+  const moveItemToDay = useCallback(
+    (itemId: string, newDay: number) => {
+      const item = itinerary.find((i) => i.id === itemId);
+      if (!item) return;
+
+      const updatedItem = { ...item, day: newDay };
+      const newItinerary = itinerary.map((i) =>
+        i.id === itemId ? updatedItem : i,
+      );
+
       onUpdateItinerary(newItinerary);
       toast({
-        title: "Activity added",
-        description: `"${item.activity}" has been added to Day ${item.day}`,
+        title: "Activity moved",
+        description: `"${item.activity}" moved to Day ${newDay}`,
       });
-    }
-  };
-
-  const removeActivity = (itemId: string) => {
-    const item = itinerary.find((i) => i.id === itemId);
-    const newItinerary = itinerary.filter((i) => i.id !== itemId);
-    onUpdateItinerary(newItinerary);
-    toast({
-      title: "Activity removed",
-      description: item
-        ? `"${item.activity}" has been removed`
-        : "Activity removed",
-    });
-  };
-
-  const moveItemToDay = (itemId: string, newDay: number) => {
-    const item = itinerary.find((i) => i.id === itemId);
-    if (!item) return;
-
-    const updatedItem = { ...item, day: newDay };
-    const newItinerary = itinerary.map((i) =>
-      i.id === itemId ? updatedItem : i,
-    );
-
-    onUpdateItinerary(newItinerary);
-    toast({
-      title: "Activity moved",
-      description: `"${item.activity}" moved to Day ${newDay}`,
-    });
-  };
+    },
+    [itinerary, onUpdateItinerary, toast],
+  );
 
   const moveDayToPosition = (fromDay: number, toPosition: number) => {
     if (fromDay === toPosition) return;
@@ -580,31 +589,43 @@ const ItineraryDisplay = ({
     }
   };
 
-  const totalCost = itinerary.reduce(
-    (sum, item) => sum + item.estimatedCost,
-    0,
+  const totalCost = useMemo(
+    () => itinerary.reduce((sum, item) => sum + item.estimatedCost, 0),
+    [itinerary],
   );
-  const remainingBudget = tripData.budget - totalCost;
 
-  const groupedByDay = itinerary.reduce(
-    (acc, item) => {
-      if (!acc[item.day]) {
-        acc[item.day] = [];
-      }
-      acc[item.day].push(item);
-      return acc;
-    },
-    {} as Record<number, ItineraryItem[]>,
+  const remainingBudget = useMemo(
+    () => tripData.budget - totalCost,
+    [tripData.budget, totalCost],
+  );
+
+  const groupedByDay = useMemo(
+    () =>
+      itinerary.reduce(
+        (acc, item) => {
+          if (!acc[item.day]) {
+            acc[item.day] = [];
+          }
+          acc[item.day].push(item);
+          return acc;
+        },
+        {} as Record<number, ItineraryItem[]>,
+      ),
+    [itinerary],
   );
 
   // Create columns for all days in the trip
-  const dayColumns = Array.from({ length: tripData.days }, (_, index) => {
-    const dayNumber = index + 1;
-    return {
-      day: dayNumber,
-      items: groupedByDay[dayNumber] || [],
-    };
-  });
+  const dayColumns = useMemo(
+    () =>
+      Array.from({ length: tripData.days }, (_, index) => {
+        const dayNumber = index + 1;
+        return {
+          day: dayNumber,
+          items: groupedByDay[dayNumber] || [],
+        };
+      }),
+    [tripData.days, groupedByDay],
+  );
 
   if (isGenerating) {
     return (

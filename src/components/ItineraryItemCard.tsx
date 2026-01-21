@@ -21,6 +21,7 @@ import {
 import { ItineraryItem } from "./ItineraryPlanner";
 import AddEditActivityDialog from "./AddEditActivityDialog";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { memo } from "react";
 
 interface ItineraryItemCardProps {
   item: ItineraryItem;
@@ -185,4 +186,4 @@ const ItineraryItemCard = ({
   );
 };
 
-export default ItineraryItemCard;
+export default memo(ItineraryItemCard);
