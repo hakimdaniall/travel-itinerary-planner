@@ -637,36 +637,34 @@ const ItineraryDisplay = ({
                 Enter your name to save this itinerary project
               </DrawerDescription>
             </DrawerHeader>
-            <div className="px-4 pb-4">
-              <div className="grid gap-4 py-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="creator-name">Your Name</Label>
-                  <Input
-                    id="creator-name"
-                    placeholder="Enter your name"
-                    value={creatorName}
-                    onChange={(e) => setCreatorName(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        saveItinerary();
-                      }
-                    }}
-                  />
-                </div>
-              </div>
-              <DrawerFooter>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setShowSaveDialog(false);
-                    setCreatorName("");
+            <div className="px-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="creator-name">Your Name</Label>
+                <Input
+                  id="creator-name"
+                  placeholder="Enter your name"
+                  value={creatorName}
+                  onChange={(e) => setCreatorName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      saveItinerary();
+                    }
                   }}
-                >
-                  Cancel
-                </Button>
-                <Button onClick={saveItinerary}>Save Project</Button>
-              </DrawerFooter>
+                />
+              </div>
             </div>
+            <DrawerFooter>
+              <Button onClick={saveItinerary}>Save Project</Button>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowSaveDialog(false);
+                  setCreatorName("");
+                }}
+              >
+                Cancel
+              </Button>
+            </DrawerFooter>
           </DrawerContent>
         </Drawer>
       ) : (
@@ -855,35 +853,33 @@ const ItineraryDisplay = ({
                 Enter a filename for your itinerary PDF
               </DrawerDescription>
             </DrawerHeader>
-            <div className="px-4 pb-4">
-              <div className="grid gap-4 py-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="pdf-filename">Filename</Label>
-                  <div className="flex items-center gap-2">
-                    <Input
-                      id="pdf-filename"
-                      placeholder="Enter filename"
-                      value={pdfFileName}
-                      onChange={(e) => setPdfFileName(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") confirmDownloadPDF();
-                        if (e.key === "Escape") setShowPdfDialog(false);
-                      }}
-                    />
-                    <span className="text-sm text-muted-foreground">.pdf</span>
-                  </div>
+            <div className="px-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="pdf-filename">Filename</Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    id="pdf-filename"
+                    placeholder="Enter filename"
+                    value={pdfFileName}
+                    onChange={(e) => setPdfFileName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") confirmDownloadPDF();
+                      if (e.key === "Escape") setShowPdfDialog(false);
+                    }}
+                  />
+                  <span className="text-sm text-muted-foreground">.pdf</span>
                 </div>
               </div>
-              <DrawerFooter>
-                <Button onClick={confirmDownloadPDF}>Download</Button>
-                <Button
-                  variant="outline"
-                  onClick={() => setShowPdfDialog(false)}
-                >
-                  Cancel
-                </Button>
-              </DrawerFooter>
             </div>
+            <DrawerFooter>
+              <Button onClick={confirmDownloadPDF}>Download</Button>
+              <Button
+                variant="outline"
+                onClick={() => setShowPdfDialog(false)}
+              >
+                Cancel
+              </Button>
+            </DrawerFooter>
           </DrawerContent>
         </Drawer>
       ) : (
