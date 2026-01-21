@@ -33,6 +33,8 @@ import {
   ArrowRightLeft,
   ChevronLeft,
   ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
 } from "lucide-react";
 import {
   Dialog,
@@ -164,6 +166,24 @@ const ItineraryDisplay = ({
     if (scrollContainerRef.current) {
       scrollContainerRef.current.scrollBy({
         left: 340,
+        behavior: "smooth",
+      });
+    }
+  }, []);
+
+  const scrollToStart = useCallback(() => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTo({
+        left: 0,
+        behavior: "smooth",
+      });
+    }
+  }, []);
+
+  const scrollToEnd = useCallback(() => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTo({
+        left: scrollContainerRef.current.scrollWidth,
         behavior: "smooth",
       });
     }
@@ -1158,22 +1178,34 @@ const ItineraryDisplay = ({
                 <Button
                   variant="outline"
                   size="sm"
+                  onClick={scrollToStart}
+                  disabled={!showLeftArrow}
+                >
+                  <ChevronsLeft className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={scrollLeft}
                   disabled={!showLeftArrow}
-                  className="gap-1"
                 >
                   <ChevronLeft className="h-4 w-4" />
-                  Previous
                 </Button>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={scrollRight}
                   disabled={!showRightArrow}
-                  className="gap-1"
                 >
-                  Next
                   <ChevronRight className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={scrollToEnd}
+                  disabled={!showRightArrow}
+                >
+                  <ChevronsRight className="h-4 w-4" />
                 </Button>
               </div>
             )}
@@ -1376,22 +1408,34 @@ const ItineraryDisplay = ({
                 <Button
                   variant="outline"
                   size="sm"
+                  onClick={scrollToStart}
+                  disabled={!showLeftArrow}
+                >
+                  <ChevronsLeft className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={scrollLeft}
                   disabled={!showLeftArrow}
-                  className="gap-1"
                 >
                   <ChevronLeft className="h-4 w-4" />
-                  Previous
                 </Button>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={scrollRight}
                   disabled={!showRightArrow}
-                  className="gap-1"
                 >
-                  Next
                   <ChevronRight className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={scrollToEnd}
+                  disabled={!showRightArrow}
+                >
+                  <ChevronsRight className="h-4 w-4" />
                 </Button>
               </div>
             )}
