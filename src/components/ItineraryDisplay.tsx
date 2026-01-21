@@ -1335,9 +1335,7 @@ const ItineraryDisplay = ({
                                   onClick={() => deleteDay(dayColumn.day)}
                                 >
                                   <X
-                                    className={
-                                      isMobile ? "h-3 w-3" : "h-4 w-4 mr-2"
-                                    }
+                                    className={isMobile ? "h-3 w-3" : "h-4 w-4"}
                                   />
                                 </Button>
                               )}
