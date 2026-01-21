@@ -28,6 +28,7 @@ import {
   X,
   Edit2,
   Edit,
+  ArrowRightLeft,
 } from "lucide-react";
 import {
   Dialog,
@@ -57,6 +58,12 @@ import {
 } from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useState, useRef } from "react";
 import {
   DragDropContext,
@@ -184,6 +191,20 @@ const ItineraryDisplay = ({
       title: "Activity moved",
       description: `"${item.activity}" moved to Day ${newDay}`,
     });
+  };
+
+  const moveDayToPosition = (fromDay: number, toPosition: number) => {
+    if (fromDay === toPosition) return;
+
+    const newDayOrder = Array.from({ length: tripData.days }, (_, i) => i + 1);
+
+    const fromIndex = fromDay - 1;
+    const toIndex = toPosition - 1;
+
+    const [removed] = newDayOrder.splice(fromIndex, 1);
+    newDayOrder.splice(toIndex, 0, removed);
+
+    reorderDays(newDayOrder);
   };
 
   const clearAllActivities = () => {
@@ -1137,23 +1158,67 @@ const ItineraryDisplay = ({
                                     {column.items.length}
                                   </Badge>
                                   {tripData.days > 1 && (
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      className={`p-0 hover:bg-rose-100 dark:hover:bg-rose-900/30 hover:text-rose-600 dark:hover:text-rose-400 ${
-                                        isMobile ? "h-6 w-6" : "h-7 w-7"
-                                      }`}
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        deleteDay(column.day);
-                                      }}
-                                    >
-                                      <X
-                                        className={
-                                          isMobile ? "h-3 w-3" : "h-4 w-4"
-                                        }
-                                      />
-                                    </Button>
+                                    <>
+                                      <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                          <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className={`p-0 hover:bg-blue-100 dark:hover:bg-blue-900/30 hover:text-blue-600 dark:hover:text-blue-400 ${
+                                              isMobile ? "h-6 w-6" : "h-7 w-7"
+                                            }`}
+                                            onClick={(e) => e.stopPropagation()}
+                                          >
+                                            <ArrowRightLeft
+                                              className={
+                                                isMobile ? "h-3 w-3" : "h-4 w-4"
+                                              }
+                                            />
+                                          </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent
+                                          align="end"
+                                          onClick={(e) => e.stopPropagation()}
+                                        >
+                                          {Array.from(
+                                            { length: tripData.days },
+                                            (_, i) => i + 1,
+                                          )
+                                            .filter((d) => d !== column.day)
+                                            .map((dayNum) => (
+                                              <DropdownMenuItem
+                                                key={dayNum}
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  moveDayToPosition(
+                                                    column.day,
+                                                    dayNum,
+                                                  );
+                                                }}
+                                              >
+                                                Move to day {dayNum}
+                                              </DropdownMenuItem>
+                                            ))}
+                                        </DropdownMenuContent>
+                                      </DropdownMenu>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className={`p-0 hover:bg-rose-100 dark:hover:bg-rose-900/30 hover:text-rose-600 dark:hover:text-rose-400 ${
+                                          isMobile ? "h-6 w-6" : "h-7 w-7"
+                                        }`}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          deleteDay(column.day);
+                                        }}
+                                      >
+                                        <X
+                                          className={
+                                            isMobile ? "h-3 w-3" : "h-4 w-4"
+                                          }
+                                        />
+                                      </Button>
+                                    </>
                                   )}
                                 </div>
                               </div>
