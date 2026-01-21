@@ -497,76 +497,87 @@ const Analytics = () => {
               </div>
             ) : data?.trips ? (
               <>
-                {(["generated", "saved", "exported"] as const).map((eventType) => {
-                  const filteredTrips = data.trips.filter(
-                    (trip) => trip.event_type === eventType
-                  );
+                {(["generated", "saved", "exported"] as const).map(
+                  (eventType) => {
+                    const filteredTrips = data.trips.filter(
+                      (trip) => trip.event_type === eventType,
+                    );
 
-                  if (filteredTrips.length === 0) return null;
+                    if (filteredTrips.length === 0) return null;
 
-                  return (
-                    <Card key={eventType}>
-                      <CardHeader>
-                        <CardTitle className="flex items-center gap-2 capitalize">
-                          {eventType === "generated" && (
-                            <Sparkles className="h-5 w-5 text-purple-500" />
-                          )}
-                          {eventType === "saved" && (
-                            <Save className="h-5 w-5 text-green-500" />
-                          )}
-                          {eventType === "exported" && (
-                            <Download className="h-5 w-5 text-orange-500" />
-                          )}
-                          {eventType} Trips
-                        </CardTitle>
-                        <CardDescription>
-                          {filteredTrips.length} trip{filteredTrips.length !== 1 ? "s" : ""} in
-                          the selected period
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="rounded-md border">
-                          <Table>
-                            <TableHeader>
-                              <TableRow>
-                                <TableHead>Destination</TableHead>
-                                <TableHead className="text-center">Days</TableHead>
-                                <TableHead className="text-right">Budget</TableHead>
-                                <TableHead>Creator</TableHead>
-                                <TableHead className="text-right">Date</TableHead>
-                              </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                              {filteredTrips.map((trip, index) => (
-                                <TableRow key={index}>
-                                  <TableCell className="font-medium">
-                                    {trip.trip_destination}
-                                  </TableCell>
-                                  <TableCell className="text-center">
-                                    {trip.trip_days}
-                                  </TableCell>
-                                  <TableCell className="text-right">
-                                    ${trip.trip_budget.toLocaleString()}
-                                  </TableCell>
-                                  <TableCell className="text-slate-600 dark:text-slate-400">
-                                    {trip.creator_name}
-                                  </TableCell>
-                                  <TableCell className="text-right text-slate-600 dark:text-slate-400">
-                                    {new Date(trip.created_at).toLocaleDateString("en-US", {
-                                      month: "short",
-                                      day: "numeric",
-                                      year: "numeric",
-                                    })}
-                                  </TableCell>
+                    return (
+                      <Card key={eventType}>
+                        <CardHeader>
+                          <CardTitle className="flex items-center gap-2 capitalize">
+                            {eventType === "generated" && (
+                              <Sparkles className="h-5 w-5 text-purple-500" />
+                            )}
+                            {eventType === "saved" && (
+                              <Save className="h-5 w-5 text-green-500" />
+                            )}
+                            {eventType === "exported" && (
+                              <Download className="h-5 w-5 text-orange-500" />
+                            )}
+                            {eventType} Trips
+                          </CardTitle>
+                          <CardDescription>
+                            {filteredTrips.length} trip
+                            {filteredTrips.length !== 1 ? "s" : ""} in the
+                            selected period
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="rounded-md border">
+                            <Table>
+                              <TableHeader>
+                                <TableRow>
+                                  <TableHead>Destination</TableHead>
+                                  <TableHead className="text-center">
+                                    Days
+                                  </TableHead>
+                                  <TableHead className="text-right">
+                                    Budget
+                                  </TableHead>
+                                  <TableHead>Creator</TableHead>
+                                  <TableHead className="text-right">
+                                    Date
+                                  </TableHead>
                                 </TableRow>
-                              ))}
-                            </TableBody>
-                          </Table>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
+                              </TableHeader>
+                              <TableBody>
+                                {filteredTrips.map((trip, index) => (
+                                  <TableRow key={index}>
+                                    <TableCell className="font-medium">
+                                      {trip.trip_destination}
+                                    </TableCell>
+                                    <TableCell className="text-center">
+                                      {trip.trip_days}
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                      ${trip.trip_budget.toLocaleString()}
+                                    </TableCell>
+                                    <TableCell className="text-slate-600 dark:text-slate-400">
+                                      {trip.creator_name}
+                                    </TableCell>
+                                    <TableCell className="text-right text-slate-600 dark:text-slate-400">
+                                      {new Date(
+                                        trip.created_at,
+                                      ).toLocaleDateString("en-US", {
+                                        month: "short",
+                                        day: "numeric",
+                                        year: "numeric",
+                                      })}
+                                    </TableCell>
+                                  </TableRow>
+                                ))}
+                              </TableBody>
+                            </Table>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  },
+                )}
               </>
             ) : (
               <div className="text-center py-12">

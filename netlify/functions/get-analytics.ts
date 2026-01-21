@@ -37,7 +37,7 @@ export const handler: Handler = async (event) => {
   // Helper function to mask creator name (backend masking)
   const maskCreatorName = (name: string | null): string => {
     if (!name || name.trim() === "") return "Anonymous";
-    
+
     const trimmedName = name.trim();
     if (trimmedName.length <= 2) {
       return trimmedName[0] + "*";
@@ -46,7 +46,10 @@ export const handler: Handler = async (event) => {
     } else {
       const visibleChars = Math.min(3, Math.floor(trimmedName.length / 3));
       const maskedLength = trimmedName.length - visibleChars;
-      return trimmedName.substring(0, visibleChars) + "*".repeat(Math.min(maskedLength, 8));
+      return (
+        trimmedName.substring(0, visibleChars) +
+        "*".repeat(Math.min(maskedLength, 8))
+      );
     }
   };
 
