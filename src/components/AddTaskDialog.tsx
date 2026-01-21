@@ -142,6 +142,7 @@ const AddTaskDialog = ({
         open={isOpen}
         onOpenChange={handleClose}
         shouldScaleBackground={false}
+        repositionInputs={false}
       >
         <DrawerContent>
           <DrawerHeader>

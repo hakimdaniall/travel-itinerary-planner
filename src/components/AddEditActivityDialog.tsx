@@ -199,7 +199,7 @@ const AddEditActivityDialog = ({
 
   if (isMobile) {
     return (
-      <Drawer open={open} onOpenChange={setOpen} shouldScaleBackground={false}>
+      <Drawer open={open} onOpenChange={setOpen} shouldScaleBackground={false} repositionInputs={false}>
         <DrawerTrigger asChild>{triggerButton}</DrawerTrigger>
         <DrawerContent>
           <DrawerHeader>

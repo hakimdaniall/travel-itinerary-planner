@@ -629,6 +629,7 @@ const ItineraryDisplay = ({
           open={showSaveDialog}
           onOpenChange={setShowSaveDialog}
           shouldScaleBackground={false}
+          repositionInputs={false}
         >
           <DrawerContent>
             <DrawerHeader>
@@ -713,6 +714,7 @@ const ItineraryDisplay = ({
           open={showBudgetDialog}
           onOpenChange={setShowBudgetDialog}
           shouldScaleBackground={false}
+          repositionInputs={false}
         >
           <DrawerContent>
             <DrawerHeader>
@@ -843,6 +845,7 @@ const ItineraryDisplay = ({
           open={showPdfDialog}
           onOpenChange={setShowPdfDialog}
           shouldScaleBackground={false}
+          repositionInputs={false}
         >
           <DrawerContent>
             <DrawerHeader>
