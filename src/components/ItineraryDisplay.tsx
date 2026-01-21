@@ -957,16 +957,28 @@ const ItineraryDisplay = ({
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card className="border border-slate-200 dark:border-slate-800">
-            <CardContent className="p-6">
+            <CardContent className={isMobile ? "p-4" : "p-6"}>
               <div className="flex items-center space-x-3">
-                <div className="p-3 rounded-lg bg-emerald-100 dark:bg-emerald-900/30">
-                  <DollarSign className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                <div
+                  className={`rounded-lg bg-emerald-100 dark:bg-emerald-900/30 ${isMobile ? "p-2" : "p-3"}`}
+                >
+                  <DollarSign
+                    className={
+                      isMobile
+                        ? "h-4 w-4 text-emerald-600 dark:text-emerald-400"
+                        : "h-5 w-5 text-emerald-600 dark:text-emerald-400"
+                    }
+                  />
                 </div>
                 <div>
-                  <p className="text-sm text-slate-500 dark:text-slate-400 mb-1">
+                  <p
+                    className={`text-slate-500 dark:text-slate-400 mb-1 ${isMobile ? "text-xs" : "text-sm"}`}
+                  >
                     Total Cost
                   </p>
-                  <p className="text-2xl font-semibold text-slate-900 dark:text-slate-50">
+                  <p
+                    className={`font-semibold text-slate-900 dark:text-slate-50 ${isMobile ? "text-lg" : "text-2xl"}`}
+                  >
                     {tripData.currency} {totalCost}
                   </p>
                 </div>
@@ -975,16 +987,28 @@ const ItineraryDisplay = ({
           </Card>
 
           <Card className="border border-slate-200 dark:border-slate-800">
-            <CardContent className="p-6 relative">
+            <CardContent className={`relative ${isMobile ? "p-4" : "p-6"}`}>
               <div className="flex items-center space-x-3">
-                <div className="p-3 rounded-lg bg-blue-100 dark:bg-blue-900/30">
-                  <DollarSign className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                <div
+                  className={`rounded-lg bg-blue-100 dark:bg-blue-900/30 ${isMobile ? "p-2" : "p-3"}`}
+                >
+                  <DollarSign
+                    className={
+                      isMobile
+                        ? "h-4 w-4 text-blue-600 dark:text-blue-400"
+                        : "h-5 w-5 text-blue-600 dark:text-blue-400"
+                    }
+                  />
                 </div>
                 <div>
-                  <p className="text-sm text-slate-500 dark:text-slate-400 mb-1">
+                  <p
+                    className={`text-slate-500 dark:text-slate-400 mb-1 ${isMobile ? "text-xs" : "text-sm"}`}
+                  >
                     Budget
                   </p>
-                  <p className="text-2xl font-semibold text-slate-900 dark:text-slate-50">
+                  <p
+                    className={`font-semibold text-slate-900 dark:text-slate-50 ${isMobile ? "text-lg" : "text-2xl"}`}
+                  >
                     {tripData.currency} {tripData.budget}
                   </p>
                 </div>
@@ -993,29 +1017,31 @@ const ItineraryDisplay = ({
                 size="icon"
                 variant="ghost"
                 onClick={handleBudgetEdit}
-                className="h-6 w-6 absolute top-4 right-4 hover:bg-blue-100 dark:hover:bg-blue-900/30 hover:text-blue-600 dark:hover:text-blue-400"
+                className={`absolute hover:bg-blue-100 dark:hover:bg-blue-900/30 hover:text-blue-600 dark:hover:text-blue-400 ${isMobile ? "h-5 w-5 top-3 right-3" : "h-6 w-6 top-4 right-4"}`}
               >
-                <Edit className="h-4 w-4" />
+                <Edit className={isMobile ? "h-3 w-3" : "h-4 w-4"} />
               </Button>
             </CardContent>
           </Card>
 
           <Card className="border border-slate-200 dark:border-slate-800">
-            <CardContent className="p-6">
+            <CardContent className={isMobile ? "p-4" : "p-6"}>
               <div className="flex items-center space-x-3">
                 <div
-                  className={`p-3 rounded-lg ${remainingBudget >= 0 ? "bg-teal-100 dark:bg-teal-900/30" : "bg-rose-100 dark:bg-rose-900/30"}`}
+                  className={`rounded-lg ${isMobile ? "p-2" : "p-3"} ${remainingBudget >= 0 ? "bg-teal-100 dark:bg-teal-900/30" : "bg-rose-100 dark:bg-rose-900/30"}`}
                 >
                   <DollarSign
-                    className={`h-5 w-5 ${remainingBudget >= 0 ? "text-teal-600 dark:text-teal-400" : "text-rose-600 dark:text-rose-400"}`}
+                    className={`${isMobile ? "h-4 w-4" : "h-5 w-5"} ${remainingBudget >= 0 ? "text-teal-600 dark:text-teal-400" : "text-rose-600 dark:text-rose-400"}`}
                   />
                 </div>
                 <div>
-                  <p className="text-sm text-slate-500 dark:text-slate-400 mb-1">
+                  <p
+                    className={`text-slate-500 dark:text-slate-400 mb-1 ${isMobile ? "text-xs" : "text-sm"}`}
+                  >
                     Remaining
                   </p>
                   <p
-                    className={`text-2xl font-semibold ${remainingBudget >= 0 ? "text-teal-600 dark:text-teal-400" : "text-rose-600 dark:text-rose-400"}`}
+                    className={`font-semibold ${isMobile ? "text-lg" : "text-2xl"} ${remainingBudget >= 0 ? "text-teal-600 dark:text-teal-400" : "text-rose-600 dark:text-rose-400"}`}
                   >
                     {tripData.currency} {remainingBudget}
                   </p>
@@ -1180,20 +1206,52 @@ const ItineraryDisplay = ({
           </TabsContent>
           <TabsContent value="table" className="space-y-4">
             <Card>
-              <CardHeader>
-                <CardTitle>Itinerary Details</CardTitle>
+              <CardHeader className={isMobile ? "p-4" : "p-6"}>
+                <CardTitle className={isMobile ? "text-base" : "text-lg"}>
+                  Itinerary Details
+                </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="overflow-x-auto">
-                  <Table>
+              <CardContent className={isMobile ? "p-0" : "p-6"}>
+                <div
+                  className={isMobile ? "overflow-x-auto" : "overflow-x-auto"}
+                >
+                  <Table className={isMobile ? "relative" : ""}>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Time</TableHead>
-                        <TableHead>Activity</TableHead>
-                        <TableHead>Location</TableHead>
-                        <TableHead>Cost ({tripData.currency})</TableHead>
-                        <TableHead>Type</TableHead>
-                        <TableHead className="w-[100px]">Actions</TableHead>
+                        <TableHead
+                          className={isMobile ? "text-xs py-2 px-2" : ""}
+                        >
+                          Time
+                        </TableHead>
+                        <TableHead
+                          className={isMobile ? "text-xs py-2 px-2" : ""}
+                        >
+                          Activity
+                        </TableHead>
+                        <TableHead
+                          className={isMobile ? "text-xs py-2 px-2" : ""}
+                        >
+                          Location
+                        </TableHead>
+                        <TableHead
+                          className={isMobile ? "text-xs py-2 px-2" : ""}
+                        >
+                          Cost ({tripData.currency})
+                        </TableHead>
+                        <TableHead
+                          className={isMobile ? "text-xs py-2 px-2" : ""}
+                        >
+                          Type
+                        </TableHead>
+                        <TableHead
+                          className={
+                            isMobile
+                              ? "w-[50px] text-xs py-2 px-2 sticky right-0 bg-white dark:bg-slate-950 z-10"
+                              : "w-[100px]"
+                          }
+                        >
+                          {isMobile ? "" : "Actions"}
+                        </TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -1203,31 +1261,48 @@ const ItineraryDisplay = ({
                             key={`day-${dayColumn.day}`}
                             className="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-800"
                           >
-                            <TableCell colSpan={6} className="py-4">
+                            <TableCell
+                              colSpan={5}
+                              className={isMobile ? "py-3 px-2" : "py-4"}
+                            >
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">
-                                  <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-50">
+                                  <h3
+                                    className={`font-semibold text-slate-900 dark:text-slate-50 ${isMobile ? "text-sm" : "text-lg"}`}
+                                  >
                                     Day {dayColumn.day}
                                   </h3>
                                   <Badge
                                     variant="outline"
-                                    className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700"
+                                    className={`bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700 ${isMobile ? "text-xs px-1.5 py-0.5" : ""}`}
                                   >
-                                    {dayColumn.items.length} activities
+                                    {dayColumn.items.length}{" "}
+                                    {isMobile ? "" : "activities"}
                                   </Badge>
                                 </div>
-                                {tripData.days > 1 && (
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="hover:bg-rose-100 dark:hover:bg-rose-900/30 hover:text-rose-600 dark:hover:text-rose-400"
-                                    onClick={() => deleteDay(dayColumn.day)}
-                                  >
-                                    <X className="h-4 w-4 mr-2" />
-                                    Delete Day
-                                  </Button>
-                                )}
                               </div>
+                            </TableCell>
+                            <TableCell
+                              className={
+                                isMobile
+                                  ? "py-3 px-2 sticky right-0 bg-slate-50 dark:bg-slate-900/50"
+                                  : "py-4"
+                              }
+                            >
+                              {tripData.days > 1 && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className={`hover:bg-rose-100 dark:hover:bg-rose-900/30 hover:text-rose-600 dark:hover:text-rose-400 ${isMobile ? "h-7 w-7 p-0" : ""}`}
+                                  onClick={() => deleteDay(dayColumn.day)}
+                                >
+                                  <X
+                                    className={
+                                      isMobile ? "h-3 w-3" : "h-4 w-4 mr-2"
+                                    }
+                                  />
+                                </Button>
+                              )}
                             </TableCell>
                           </TableRow>
 
@@ -1235,7 +1310,7 @@ const ItineraryDisplay = ({
                             <TableRow key={`day-${dayColumn.day}-empty`}>
                               <TableCell
                                 colSpan={6}
-                                className="py-6 text-center text-gray-500 dark:text-gray-400 italic"
+                                className={`text-center text-gray-500 dark:text-gray-400 italic ${isMobile ? "py-4 text-xs px-2" : "py-6"}`}
                               >
                                 No activities planned for this day
                               </TableCell>
@@ -1248,35 +1323,69 @@ const ItineraryDisplay = ({
                                   key={item.id}
                                   className={`${index === dayColumn.items.length - 1 ? "border-b-4 border-gray-200 dark:border-gray-700" : ""}`}
                                 >
-                                  <TableCell className="font-medium">
+                                  <TableCell
+                                    className={`font-medium ${isMobile ? "text-xs py-2 px-2" : ""}`}
+                                  >
                                     {item.time}
                                   </TableCell>
-                                  <TableCell>{item.activity}</TableCell>
-                                  <TableCell>{item.location}</TableCell>
-                                  <TableCell>
+                                  <TableCell
+                                    className={
+                                      isMobile ? "text-xs py-2 px-2" : ""
+                                    }
+                                  >
+                                    {item.activity}
+                                  </TableCell>
+                                  <TableCell
+                                    className={
+                                      isMobile ? "text-xs py-2 px-2" : ""
+                                    }
+                                  >
+                                    {item.location}
+                                  </TableCell>
+                                  <TableCell
+                                    className={
+                                      isMobile ? "text-xs py-2 px-2" : ""
+                                    }
+                                  >
                                     {item.estimatedCost > 0
                                       ? `${tripData.currency} ${item.estimatedCost}`
                                       : "Free"}
                                   </TableCell>
-                                  <TableCell>
+                                  <TableCell
+                                    className={
+                                      isMobile ? "text-xs py-2 px-2" : ""
+                                    }
+                                  >
                                     <Badge
                                       variant="outline"
-                                      className={getTypeColor(item.type)}
+                                      className={`${getTypeColor(item.type)} ${isMobile ? "text-xs px-1.5 py-0.5" : ""}`}
                                     >
                                       {getTypeIcon(item.type)}
-                                      <span className="ml-1 capitalize">
-                                        {item.type}
-                                      </span>
+                                      {!isMobile && (
+                                        <span className="ml-1 capitalize">
+                                          {item.type}
+                                        </span>
+                                      )}
                                     </Badge>
                                   </TableCell>
-                                  <TableCell>
+                                  <TableCell
+                                    className={
+                                      isMobile
+                                        ? "py-2 px-2 sticky right-0 bg-white dark:bg-slate-950"
+                                        : ""
+                                    }
+                                  >
                                     <Button
                                       variant="ghost"
                                       size="sm"
                                       onClick={() => removeActivity(item.id)}
-                                      className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+                                      className={`p-0 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 ${isMobile ? "h-6 w-6" : "h-8 w-8"}`}
                                     >
-                                      <Trash2 className="h-4 w-4" />
+                                      <Trash2
+                                        className={
+                                          isMobile ? "h-3 w-3" : "h-4 w-4"
+                                        }
+                                      />
                                     </Button>
                                   </TableCell>
                                 </TableRow>
