@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { format } from "date-fns";
 import { CalendarIcon, Plus, X, Sparkles, Wrench } from "lucide-react";
+import type { DateRange } from "react-day-picker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -47,8 +48,7 @@ interface TripFormProps {
 
 const TripForm = ({ onSubmit, onCustomCreate }: TripFormProps) => {
   const [destinations, setDestinations] = useState<string[]>([""]);
-  const [startDate, setStartDate] = useState<Date>();
-  const [endDate, setEndDate] = useState<Date>();
+  const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [errors, setErrors] = useState<{
     fromDestination?: string;
     destinations?: string;
@@ -107,10 +107,10 @@ const TripForm = ({ onSubmit, onCustomCreate }: TripFormProps) => {
     }
 
     // Validate dates
-    if (!startDate) {
+    if (!dateRange?.from) {
       newErrors.startDate = "Start date is required";
     }
-    if (!endDate) {
+    if (!dateRange?.to) {
       newErrors.endDate = "End date is required";
     }
 
@@ -127,7 +127,7 @@ const TripForm = ({ onSubmit, onCustomCreate }: TripFormProps) => {
 
     const days =
       Math.ceil(
-        (endDate!.getTime() - startDate!.getTime()) / (1000 * 60 * 60 * 24),
+        (dateRange!.to!.getTime() - dateRange!.from!.getTime()) / (1000 * 60 * 60 * 24),
       ) + 1;
 
     const currency = formData.get("currency") as string;
@@ -136,8 +136,8 @@ const TripForm = ({ onSubmit, onCustomCreate }: TripFormProps) => {
     const tripData: TripData = {
       fromDestination,
       destinations: filteredDestinations,
-      startDate: startDate!,
-      endDate: endDate!,
+      startDate: dateRange!.from!,
+      endDate: dateRange!.to!,
       days,
       includeFlights,
       budget,
@@ -170,10 +170,10 @@ const TripForm = ({ onSubmit, onCustomCreate }: TripFormProps) => {
     }
 
     // Validate dates
-    if (!startDate) {
+    if (!dateRange?.from) {
       newErrors.startDate = "Start date is required";
     }
-    if (!endDate) {
+    if (!dateRange?.to) {
       newErrors.endDate = "End date is required";
     }
 
@@ -190,7 +190,7 @@ const TripForm = ({ onSubmit, onCustomCreate }: TripFormProps) => {
 
     const days =
       Math.ceil(
-        (endDate!.getTime() - startDate!.getTime()) / (1000 * 60 * 60 * 24),
+        (dateRange!.to!.getTime() - dateRange!.from!.getTime()) / (1000 * 60 * 60 * 24),
       ) + 1;
 
     const currency = formData.get("currency") as string;
@@ -199,8 +199,8 @@ const TripForm = ({ onSubmit, onCustomCreate }: TripFormProps) => {
     const tripData: TripData = {
       fromDestination,
       destinations: filteredDestinations,
-      startDate: startDate!,
-      endDate: endDate!,
+      startDate: dateRange!.from!,
+      endDate: dateRange!.to!,
       days,
       includeFlights,
       budget,
@@ -260,70 +260,49 @@ const TripForm = ({ onSubmit, onCustomCreate }: TripFormProps) => {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label>Start Date</Label>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className={cn(
-                  "w-full justify-start text-left font-normal",
-                  !startDate && "text-muted-foreground",
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {startDate ? format(startDate, "PPP") : "Pick start date"}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                mode="single"
-                selected={startDate}
-                onSelect={setStartDate}
-                disabled={(date) => date < new Date()}
-                initialFocus
-                className="pointer-events-auto"
-              />
-            </PopoverContent>
-          </Popover>
-          {errors.startDate && (
-            <p className="text-sm text-red-500">{errors.startDate}</p>
-          )}
-        </div>
-
-        <div className="space-y-2">
-          <Label>End Date</Label>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className={cn(
-                  "w-full justify-start text-left font-normal",
-                  !endDate && "text-muted-foreground",
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {endDate ? format(endDate, "PPP") : "Pick end date"}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                mode="single"
-                selected={endDate}
-                onSelect={setEndDate}
-                disabled={(date) =>
-                  date < new Date() || (startDate && date < startDate)
-                }
-                initialFocus
-                className="pointer-events-auto"
-              />
-            </PopoverContent>
-          </Popover>
-          {errors.endDate && (
-            <p className="text-sm text-red-500">{errors.endDate}</p>
-          )}
-        </div>
+      <div className="space-y-2">
+        <Label>Travel Dates</Label>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              className={cn(
+                "w-full justify-start text-left font-normal",
+                !dateRange && "text-muted-foreground",
+              )}
+            >
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              {dateRange?.from ? (
+                dateRange.to ? (
+                  <>
+                    {format(dateRange.from, "LLL dd, y")} -{" "}
+                    {format(dateRange.to, "LLL dd, y")}
+                  </>
+                ) : (
+                  format(dateRange.from, "LLL dd, y")
+                )
+              ) : (
+                <span>Pick your travel dates</span>
+              )}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar
+              mode="range"
+              selected={dateRange}
+              onSelect={setDateRange}
+              disabled={(date) => date < new Date()}
+              initialFocus
+              numberOfMonths={2}
+              className="pointer-events-auto"
+            />
+          </PopoverContent>
+        </Popover>
+        {(errors.startDate || errors.endDate) && (
+          <p className="text-sm text-red-500">
+            {errors.startDate || errors.endDate}
+          </p>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
