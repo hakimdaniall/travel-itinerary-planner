@@ -47,6 +47,10 @@ export default defineConfig(({ mode }) => ({
           // PDF generation
           "pdf-vendor": ["jspdf", "jspdf-autotable"],
 
+          // Maps and animation
+          "map-vendor": ["leaflet", "react-leaflet"],
+          "motion-vendor": ["framer-motion"],
+
           // Drag and drop
           "dnd-vendor": ["@hello-pangea/dnd"],
 

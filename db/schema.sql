@@ -39,3 +39,12 @@ SELECT
 FROM trip_analytics
 GROUP BY DATE(created_at)
 ORDER BY date DESC;
+
+-- Shared trips (read-only public links created from the planner)
+CREATE TABLE IF NOT EXISTS shared_trips (
+    id VARCHAR(16) PRIMARY KEY,
+    edit_token VARCHAR(40) NOT NULL,
+    data JSONB NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
