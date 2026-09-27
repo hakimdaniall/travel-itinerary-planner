@@ -52,10 +52,24 @@ const TripPage = () => {
         controller.current.signal,
       );
       useTripStore.getState().setItinerary(id, collected);
-      celebrate();
-      toast.success("Your trip is ready!", {
-        description: "Tweak anything: drag cards, swap activities, or ask the AI.",
-      });
+      const covered = new Set(collected.map((i) => i.day));
+      const missing = Array.from({ length: current.tripData.days }, (_, i) => i + 1).filter(
+        (d) => !covered.has(d),
+      );
+      if (missing.length === 0) {
+        celebrate();
+        toast.success("Your trip is ready!", {
+          description: "Tweak anything: drag cards, swap activities, or ask the AI.",
+        });
+      } else {
+        toast.warning(
+          `Day${missing.length > 1 ? "s" : ""} ${missing.join(", ")} couldn't be planned`,
+          {
+            description: 'Open the day\'s ⋮ menu and choose "Regenerate this day", or try again in a minute.',
+            duration: 10000,
+          },
+        );
+      }
       analyticsService
         .trackGenerated(current.tripData.destinations[0] ?? "Unknown", current.tripData.days, current.tripData.budget)
         .catch(() => {});
