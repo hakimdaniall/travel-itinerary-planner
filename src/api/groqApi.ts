@@ -13,18 +13,17 @@ const ITEM_TYPES: ItemType[] = [
   "transport",
 ];
 
-const ITEM_SCHEMA = `{
-  "day": number,
-  "time": string,            // HH:mm, 24-hour
-  "activity": string,        // short title, e.g. "Explore Senso-ji Temple"
-  "location": string,        // specific real place name, e.g. "Senso-ji, Asakusa"
-  "estimatedCost": number,   // in the trip currency, per group, 0 if free
-  "type": "flight" | "accommodation" | "activity" | "meal" | "transport",
-  "lat": number,             // latitude of the location, 4 decimals
-  "lng": number,             // longitude of the location, 4 decimals
-  "duration": number,        // minutes
-  "notes": string            // one short insider tip, max 15 words
-}`;
+// Plain example plus field rules. No comments inside the JSON: models tend to
+// copy them into their output, which makes it invalid.
+const ITEM_SCHEMA = `{"day": 1, "time": "09:30", "activity": "Explore Senso-ji Temple", "location": "Senso-ji, Asakusa", "estimatedCost": 0, "type": "activity", "lat": 35.7148, "lng": 139.7967, "duration": 90, "notes": "Arrive before 9am to beat the crowds"}
+
+Field rules:
+- day: number. time: "HH:mm", 24-hour.
+- activity: short title. location: a specific, real place name.
+- estimatedCost: number in the trip currency for the whole group, 0 if free.
+- type: one of "flight", "accommodation", "activity", "meal", "transport".
+- lat, lng: numbers, the location's coordinates to 4 decimals.
+- duration: number of minutes. notes: one short insider tip, max 15 words.`;
 
 const PACE_RULES = {
   relaxed: "3-4 items per day with long breaks; no early starts",
@@ -88,32 +87,75 @@ interface ChatMessage {
   content: string;
 }
 
-const requestBody = (messages: ChatMessage[], stream: boolean) =>
+const requestBody = (messages: ChatMessage[], stream: boolean, jsonMode: boolean) =>
   JSON.stringify({
     model: MODEL,
     stream,
     reasoning_effort: "low",
     max_completion_tokens: 32000,
-    response_format: { type: "json_object" },
+    ...(jsonMode ? { response_format: { type: "json_object" } } : {}),
     messages,
   });
 
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/** POSTs to Groq, waiting and retrying (up to twice) when rate-limited. */
+const post = async (body: string, signal?: AbortSignal): Promise<Response> => {
+  for (let attempt = 0; ; attempt++) {
+    const res = await fetch(GROQ_URL, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${GROQ_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body,
+      signal,
+    });
+    if (res.status !== 429 || attempt >= 2) return res;
+    const retryAfter = Number(res.headers.get("retry-after"));
+    await sleep(Math.min(Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter * 1000 : 2000, 10000));
+  }
+};
+
+/** Parses JSON that may be wrapped in prose or ``` fences. */
+const parseLooseJson = <T>(text: string): T => {
+  const start = text.indexOf("{");
+  const end = text.lastIndexOf("}");
+  if (start < 0 || end <= start) throw new Error("AI response contained no JSON");
+  return JSON.parse(text.slice(start, end + 1)) as T;
+};
+
+/**
+ * Requests a JSON object. Groq's JSON mode rejects the whole response if the
+ * model slips up anywhere, so on that failure we try to salvage the rejected
+ * text, then retry once without JSON mode and parse leniently.
+ */
 const completeJson = async <T>(
   messages: ChatMessage[],
   signal?: AbortSignal,
 ): Promise<T> => {
-  const res = await fetch(GROQ_URL, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${GROQ_API_KEY}`,
-      "Content-Type": "application/json",
-    },
-    body: requestBody(messages, false),
-    signal,
-  });
-  if (!res.ok) throw new Error(`AI request failed (${res.status})`);
-  const data = await res.json();
-  return JSON.parse(data.choices[0].message.content) as T;
+  const res = await post(requestBody(messages, false, true), signal);
+  if (res.ok) {
+    const data = await res.json();
+    return parseLooseJson<T>(data.choices[0].message.content);
+  }
+
+  const error = (await res.json().catch(() => ({})))?.error;
+  if (error?.code !== "json_validate_failed") {
+    throw new Error(`AI request failed (${res.status})`);
+  }
+  if (typeof error.failed_generation === "string") {
+    try {
+      return parseLooseJson<T>(error.failed_generation);
+    } catch {
+      // Not salvageable; retry below.
+    }
+  }
+
+  const retry = await post(requestBody(messages, false, false), signal);
+  if (!retry.ok) throw new Error(`AI request failed (${retry.status})`);
+  const data = await retry.json();
+  return parseLooseJson<T>(data.choices[0].message.content);
 };
 
 /**
@@ -164,8 +206,59 @@ class ArrayItemExtractor {
 }
 
 /**
+ * Streams one completion and yields itinerary items as each one closes.
+ * Stops quietly (instead of throwing) if the stream breaks after some items
+ * arrived, so the caller can resume from where it got to.
+ */
+async function* streamItems(
+  messages: ChatMessage[],
+  signal?: AbortSignal,
+): AsyncGenerator<Record<string, unknown>> {
+  // No JSON mode here: Groq validates the complete output and aborts the whole
+  // stream on any slip ("Failed to generate JSON"). The extractor below skips
+  // malformed items on its own.
+  const res = await post(requestBody(messages, true, false), signal);
+  if (!res.ok || !res.body) throw new Error(`AI request failed (${res.status})`);
+
+  const extractor = new ArrayItemExtractor();
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let pending = "";
+  let yielded = 0;
+
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      pending += decoder.decode(value, { stream: true });
+      const lines = pending.split("\n");
+      pending = lines.pop() ?? "";
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed.startsWith("data:")) continue;
+        const payload = trimmed.slice(5).trim();
+        if (payload === "[DONE]") continue;
+        const event = JSON.parse(payload);
+        if (event.error) throw new Error(event.error.message ?? "AI stream error");
+        const content: string = event.choices?.[0]?.delta?.content ?? "";
+        for (const raw of extractor.push(content)) {
+          yielded++;
+          yield raw;
+        }
+      }
+    }
+  } catch (error) {
+    if ((error as Error).name === "AbortError" || yielded === 0) throw error;
+    console.warn("Itinerary stream ended early; resuming.", error);
+  }
+}
+
+const MAX_ATTEMPTS = 3;
+
+/**
  * Generates a full itinerary, calling `onItem` for each item as it streams in.
- * Resolves with every item once the response completes.
+ * If the model stops early or the stream breaks, it asks for the remaining
+ * days (up to MAX_ATTEMPTS requests in total).
  */
 export const streamItinerary = async (
   tripData: TripData,
@@ -173,13 +266,21 @@ export const streamItinerary = async (
   signal?: AbortSignal,
 ): Promise<ItineraryItem[]> => {
   const pace = PACE_RULES[tripData.pace ?? "balanced"];
-  const system = `You are an expert local travel planner. Plan a complete day-by-day itinerary.
+  const items: ItineraryItem[] = [];
+  let lastError: unknown;
 
-Return JSON: {"sampleItinerary": [item, ...]} where each item is:
+  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+    const lastDay = items.at(-1)?.day ?? 0;
+    if (lastDay >= tripData.days) break;
+    const firstDay = lastDay + 1;
+
+    const system = `You are an expert local travel planner. Plan a day-by-day itinerary.
+
+Return JSON: {"sampleItinerary": [item, ...]} where each item looks like:
 ${ITEM_SCHEMA}
 
 Rules:
-- Cover EVERY day from 1 to ${tripData.days}, in chronological order (day, then time). Never stop early.
+- Cover EVERY day from ${firstDay} to ${tripData.days}, in chronological order (day, then time). Never stop early.
 - Pace: ${pace}. Every day includes breakfast, lunch and dinner at named, real local places, plus an accommodation item in the evening.
 ${tripData.includeFlights ? `- Day 1 starts with a flight from the origin to the first destination. The last day ends with a return flight to the origin.` : "- Do not include flights."}
 - Split days sensibly between the destinations in order, with a transport item when moving between cities.
@@ -187,57 +288,36 @@ ${tripData.includeFlights ? `- Day 1 starts with a flight from the origin to the
 - Order each day so places are geographically close to each other; avoid zig-zagging across the city.
 - Use only real, specific places with accurate coordinates.
 - Keep the total of estimatedCost within the budget.
-- Output JSON only.`;
+- Output only the JSON object: no markdown, no comments, no extra text.`;
 
-  const res = await fetch(GROQ_URL, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${GROQ_API_KEY}`,
-      "Content-Type": "application/json",
-    },
-    body: requestBody(
-      [
-        { role: "system", content: system },
-        { role: "user", content: tripContext(tripData) },
-      ],
-      true,
-    ),
-    signal,
-  });
-  if (!res.ok || !res.body) throw new Error(`AI request failed (${res.status})`);
+    const alreadyPlanned =
+      items.length > 0
+        ? `\n\nDays 1-${lastDay} are already planned. Plan ONLY days ${firstDay} to ${tripData.days}, without repeating these places:\n${items.map((i) => `Day ${i.day}: ${i.activity}`).join("\n")}`
+        : "";
 
-  const extractor = new ArrayItemExtractor();
-  const reader = res.body.getReader();
-  const decoder = new TextDecoder();
-  const items: ItineraryItem[] = [];
-  let pending = "";
-
-  for (;;) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    pending += decoder.decode(value, { stream: true });
-    const lines = pending.split("\n");
-    pending = lines.pop() ?? "";
-    for (const line of lines) {
-      const trimmed = line.trim();
-      if (!trimmed.startsWith("data:")) continue;
-      const payload = trimmed.slice(5).trim();
-      if (payload === "[DONE]") continue;
-      const event = JSON.parse(payload);
-      if (event.error) throw new Error(event.error.message ?? "AI stream error");
-      const content: string = event.choices?.[0]?.delta?.content ?? "";
-      if (!content) continue;
-      for (const raw of extractor.push(content)) {
-        const item = normalizeItem(raw, items.at(-1)?.day ?? 1);
-        if (item && item.day <= tripData.days) {
+    try {
+      for await (const raw of streamItems(
+        [
+          { role: "system", content: system },
+          { role: "user", content: tripContext(tripData) + alreadyPlanned },
+        ],
+        signal,
+      )) {
+        const item = normalizeItem(raw, items.at(-1)?.day ?? firstDay);
+        if (item && item.day >= firstDay && item.day <= tripData.days) {
           items.push(item);
           onItem(item);
         }
       }
+    } catch (error) {
+      if ((error as Error).name === "AbortError") throw error;
+      lastError = error;
     }
   }
 
-  if (items.length === 0) throw new Error("The AI returned an empty itinerary");
+  if (items.length === 0) {
+    throw lastError instanceof Error ? lastError : new Error("The AI returned an empty itinerary");
+  }
   return items;
 };
 
